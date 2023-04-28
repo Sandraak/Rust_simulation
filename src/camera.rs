@@ -1,14 +1,19 @@
+use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
 use bevy::render::camera::Projection;
 use bevy::window::WindowResolution;
-use bevy::input::mouse::{MouseMotion, MouseWheel};
-// use bevy_mod_picking::{
-//     DebugCursorPickingPlugin, PickableBundle, PickingCameraBundle, PickingPlugin,
-// };
 
 #[derive(Resource)]
-pub struct PrimaryWindowResolution{
-    pub resolution : WindowResolution
+pub struct PrimaryWindowResolution {
+    pub resolution: WindowResolution,
+}
+
+pub fn get_primary_window_size(windows: &Res<PrimaryWindowResolution>) -> Vec2 {
+    // let window = windows.get_primary().unwrap();
+    Vec2::new(
+        windows.resolution.width() as f32,
+        windows.resolution.height() as f32,
+    )
 }
 
 /// Tags an entity as capable of panning and orbiting.
@@ -122,11 +127,6 @@ pub fn pan_orbit_camera(
     // consume any remaining events, so they don't pile up if we don't need them
     // (and also to avoid Bevy warning us about not checking events every frame update)
     ev_motion.clear();
-}
-
-pub fn get_primary_window_size(windows: &Res<PrimaryWindowResolution>) -> Vec2 {
-    // let window = windows.get_primary().unwrap();
-    Vec2::new(windows.resolution.width() as f32, windows.resolution.height() as f32)
 }
 
 // /// Spawn a camera like this
