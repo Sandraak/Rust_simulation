@@ -136,7 +136,7 @@ pub fn spawn_rook(
                 mesh,
                 material,
                 transform: {
-                    let mut transform = Transform::from_translation(Vec3::new(-0.1, 0., 1.8));
+                    let transform = Transform::from_translation(Vec3::new(-0.1, 0., 1.8));
                     transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
                 },
                 ..Default::default()
