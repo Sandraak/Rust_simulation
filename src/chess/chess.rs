@@ -1,5 +1,7 @@
+use bevy::prelude::*;
+
 use std::borrow::Borrow;
-use std::fmt::{Debug};
+use std::fmt::Debug;
 use std::ops::{Index, IndexMut, Not};
 
 use super::pos::*;
@@ -121,7 +123,8 @@ impl Chess {
                     let to = from + step;
                     let too = from + step * 2;
 
-                    let step = (self[to].is_none() && Self::on_board(&to)).then(|| Move::new(from, to));
+                    let step =
+                        (self[to].is_none() && Self::on_board(&to)).then(|| Move::new(from, to));
                     let leap = (from.y() == start_row && self[to].is_none() && self[too].is_none())
                         .then(|| Move::new(from, too));
 
@@ -305,10 +308,10 @@ impl Outcome {
     }
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Piece {
-    color: Color,
-    kind: Kind,
+    pub color: Color,
+    pub kind: Kind,
 }
 
 impl Piece {
@@ -376,7 +379,6 @@ impl Not for Color {
         }
     }
 }
-
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Kind {

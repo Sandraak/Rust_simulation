@@ -1,27 +1,27 @@
 use bevy::{prelude::*, window::WindowResolution};
 use bevy_mod_picking::{DebugCursorPickingPlugin, DefaultPickingPlugins, PickingCameraBundle};
 
-use crate::{board::*, camera, pieces::*, chess::*};
+use crate::{board::*, camera, chess::*, pieces::*};
 
 pub fn create_app(screen_width: f32, screen_height: f32) -> App {
     let resolution = WindowResolution::new(screen_width, screen_height);
     println!("starting app");
     let mut app = App::new();
     app.insert_resource(BoardState::default())
-    .add_plugins(DefaultPlugins.set(WindowPlugin {
-        primary_window: Some(Window {
-            resolution: resolution.clone(),
-            title: "Chess".to_owned(),
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                resolution: resolution.clone(),
+                title: "Chess".to_owned(),
+                ..default()
+            }),
             ..default()
-        }),
-        ..default()
-    }))
-    .insert_resource(camera::PrimaryWindowResolution { resolution })
-    .add_system(camera::pan_orbit_camera)
-    .add_plugins(DefaultPickingPlugins)
-    .add_plugin(BoardPlugin)
-    .add_plugin(PiecesPlugin)
-    .add_startup_system(setup);
+        }))
+        .insert_resource(camera::PrimaryWindowResolution { resolution })
+        .add_system(camera::pan_orbit_camera)
+        .add_plugins(DefaultPickingPlugins)
+        .add_plugin(BoardPlugin)
+        .add_plugin(PiecesPlugin)
+        .add_startup_system(setup);
 
     #[cfg(debug_assertions)]
     app.add_plugin(DebugCursorPickingPlugin);
