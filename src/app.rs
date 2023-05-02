@@ -1,9 +1,7 @@
-use crate::board::*;
-use crate::camera;
-use crate::pieces;
-use bevy::prelude::*;
-use bevy::window::WindowResolution;
-use bevy_mod_picking::{DebugCursorPickingPlugin, PickingCameraBundle, PickingPlugin};
+use bevy::{prelude::*, window::WindowResolution};
+use bevy_mod_picking::{DebugCursorPickingPlugin, DefaultPickingPlugins, PickingCameraBundle};
+
+use crate::{board::*, camera, pieces};
 
 pub fn create_app(screen_width: f32, screen_height: f32) -> App {
     let resolution = WindowResolution::new(screen_width, screen_height);
@@ -19,7 +17,7 @@ pub fn create_app(screen_width: f32, screen_height: f32) -> App {
     }))
     .insert_resource(camera::PrimaryWindowResolution { resolution })
     .add_system(camera::pan_orbit_camera)
-    .add_plugin(PickingPlugin)
+    .add_plugins(DefaultPickingPlugins)
     .add_plugin(BoardPlugin)
     .add_startup_system(setup)
     .add_startup_system(pieces::create_pieces);
