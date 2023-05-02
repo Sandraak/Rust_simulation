@@ -1,5 +1,31 @@
 use bevy::prelude::*;
-use bevy_mod_picking::PickableBundle;
+use bevy_mod_picking::{HoverEvent, PickableBundle, PickingEvent};
+
+pub struct BoardPlugin;
+impl Plugin for BoardPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<SelectedSquare>()
+            .add_startup_system(create_board);
+        // .add_system(color_squares);
+    }
+}
+
+#[derive(Component)]
+pub struct Square {
+    pub x: u8,
+    pub y: u8,
+}
+
+impl Square {
+    fn is_white(&self) -> bool {
+        (self.x + self.y + 1) % 2 == 0
+    }
+}
+
+#[derive(Resource, Default)]
+struct SelectedSquare {
+    entity: Option<Entity>,
+}
 
 pub fn create_board(
     mut commands: Commands,
@@ -29,7 +55,8 @@ pub fn create_board(
                     transform: Transform::from_translation(Vec3::new(i as f32, 0., j as f32)),
                     ..Default::default()
                 })
-                .insert(PickableBundle::default());
+                .insert(PickableBundle::default())
+                .insert(Square { x: i, y: j });
         }
     }
 }
