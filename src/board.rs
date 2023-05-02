@@ -57,6 +57,11 @@ impl Square {
     }
 }
 
+#[derive(Default, Resource)]
+struct SelectedSquare {
+    entity: Option<Entity>,
+}
+
 fn create_board(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,

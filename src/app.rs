@@ -1,13 +1,14 @@
 use bevy::{prelude::*, window::WindowResolution};
 use bevy_mod_picking::{DebugCursorPickingPlugin, DefaultPickingPlugins, PickingCameraBundle};
 
-use crate::{board::*, camera, pieces};
+use crate::{board::*, camera, pieces::*, chess::*};
 
 pub fn create_app(screen_width: f32, screen_height: f32) -> App {
     let resolution = WindowResolution::new(screen_width, screen_height);
     println!("starting app");
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+    app.insert_resource(BoardState::default())
+    .add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
             resolution: resolution.clone(),
             title: "Chess".to_owned(),
@@ -19,8 +20,8 @@ pub fn create_app(screen_width: f32, screen_height: f32) -> App {
     .add_system(camera::pan_orbit_camera)
     .add_plugins(DefaultPickingPlugins)
     .add_plugin(BoardPlugin)
-    .add_startup_system(setup)
-    .add_startup_system(pieces::create_pieces);
+    .add_plugin(PiecesPlugin)
+    .add_startup_system(setup);
 
     #[cfg(debug_assertions)]
     app.add_plugin(DebugCursorPickingPlugin);
