@@ -1,15 +1,18 @@
 use bevy::prelude::*;
 use bevy_mod_picking::{Hover, PickableBundle, Selection};
 
-use crate::chess::chess::Piece;
+use crate::pieces::PieceComponent;
 
 pub struct BoardPlugin;
 
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SquareColors>()
+            .init_resource::<SelectedSquare>()
+            .init_resource::<SelectedPiece>()
             .add_startup_system(create_board)
-            .add_system(color_squares);
+            .add_system(color_squares)
+            .add_system(select_square);
     }
 }
 
@@ -47,7 +50,7 @@ impl FromWorld for SquareColors {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Copy, Clone)]
 pub struct Square {
     pub x: u8,
     pub y: u8,
@@ -61,14 +64,13 @@ impl Square {
 
 #[derive(Default, Resource)]
 struct SelectedSquare {
-    entity: Option<Entity>,
+    selected: Option<Square>,
 }
 
 #[derive(Default, Resource)]
 struct SelectedPiece {
-    entity: Option<Entity>,
+    selected: Option<PieceComponent>,
 }
-
 
 fn create_board(
     mut commands: Commands,
@@ -123,48 +125,37 @@ fn color_squares(
     }
 }
 
-// fn select_square(
-//     mouse_button_inputs: Res<Input<MouseButton>>,
-//     mut selected_square: ResMut<SelectedSquare>,
-//     mut selected_piece: ResMut<SelectedPiece>,
-//     squares_query: Query<&Square>,
-//     mut pieces_query: Query<(Entity, &mut Piece)>,
-// ) {
-//     // Only run if the left button is pressed
-//     if !mouse_button_inputs.just_pressed(MouseButton::Left) {
-//         return;
-//     }
+fn select_square(
+    mouse_button_inputs: Res<Input<MouseButton>>,
+    mut selected_square: ResMut<SelectedSquare>,
+    mut selected_piece: ResMut<SelectedPiece>,
+    mut square_query: Query<(&Square, &Interaction)>,
+    pieces_query: Query<&PieceComponent>,
+) {
+    // Only run if the left button is pressed
+    if !mouse_button_inputs.just_pressed(MouseButton::Left) {
+        return;
+    }
 
-//     // Get the square under the cursor and set it as the selected
-//     if let Some((square_entity, _intersection)) = pick_state.top(Group::default()) {
-//         // Get the actual square. This ensures it exists and is a square
-//         if let Ok(square) = squares_query.get(*square_entity) {
-//             // Mark it as selected
-//             selected_square.entity = Some(*square_entity);
-
-//             if let Some(selected_piece_entity) = selected_piece.entity {
-//                 // Move the selected piece to the selected square
-//                 if let Ok((_piece_entity, mut piece)) = pieces_query.get_mut(selected_piece_entity)
-//                 {
-//                     piece.x = square.x;
-//                     piece.y = square.y;
-//                 }
-//                 selected_square.entity = None;
-//                 selected_piece.entity = None;
-//             } else {
-//                 // Select the piece in the currently selected square
-//                 for (piece_entity, piece) in pieces_query.iter_mut() {
-//                     if piece.x == square.x && piece.y == square.y {
-//                         // piece_entity is now the entity in the same square
-//                         selected_piece.entity = Some(piece_entity);
-//                         break;
-//                     }
-//                 }
-//             }
-//         }
-//     } else {
-//         // Player clicked outside the board, deselect everything
-//         selected_square.entity = None;
-//         selected_piece.entity = None;
-//     }
-// }
+    for (square, interaction) in square_query.iter_mut() {
+        if let Interaction::Clicked = interaction {
+            let optional_piece = pieces_query
+                .into_iter()
+                .find(|piece| piece.x as u8 == square.x && piece.y as u8 == square.y);
+            if optional_piece.is_some() {
+                selected_piece.selected = optional_piece.cloned();
+            }
+        }
+    }
+    if selected_piece.selected.is_some() {
+        for (square, interaction) in square_query.iter_mut() {
+            if let Interaction::Clicked = interaction {
+                selected_square.selected = Some(*square);
+            }
+        }
+    }
+    if selected_piece.selected.is_some() && selected_square.selected.is_some() {
+        selected_piece.selected.unwrap().x = selected_square.selected.unwrap().x as usize;
+        selected_piece.selected.unwrap().y = selected_square.selected.unwrap().y as usize;
+    }
+}

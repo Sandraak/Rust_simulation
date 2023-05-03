@@ -308,7 +308,7 @@ impl Outcome {
     }
 }
 
-#[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Piece {
     pub color: Color,
     pub kind: Kind,

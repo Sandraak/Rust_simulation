@@ -11,6 +11,13 @@ impl Plugin for PiecesPlugin {
     }
 }
 
+#[derive(Component, Clone, Copy)]
+pub struct PieceComponent {
+    pub piece: Piece,
+    pub x: usize,
+    pub y: usize,
+}
+
 fn spawn_king(
     commands: &mut Commands,
     material: Handle<StandardMaterial>,
@@ -29,9 +36,10 @@ fn spawn_king(
             )),
             ..Default::default()
         })
-        .insert(Piece {
-            color: piece.color,
-            kind: piece.kind,
+        .insert(PieceComponent {
+            piece,
+            x: position.0,
+            y: position.1,
         })
         // Add children to the parent
         .with_children(|parent| {
@@ -74,9 +82,10 @@ pub fn spawn_knight(
             )),
             ..Default::default()
         })
-        .insert(Piece {
-            color: piece.color,
-            kind: piece.kind,
+        .insert(PieceComponent {
+            piece,
+            x: position.0,
+            y: position.1,
         })
         // Add children to the parent
         .with_children(|parent| {
@@ -117,9 +126,10 @@ pub fn spawn_queen(
             )),
             ..Default::default()
         })
-        .insert(Piece {
-            color: piece.color,
-            kind: piece.kind,
+        .insert(PieceComponent {
+            piece,
+            x: position.0,
+            y: position.1,
         })
         .with_children(|parent| {
             parent.spawn(PbrBundle {
@@ -150,9 +160,10 @@ pub fn spawn_bishop(
             )),
             ..Default::default()
         })
-        .insert(Piece {
-            color: piece.color,
-            kind: piece.kind,
+        .insert(PieceComponent {
+            piece,
+            x: position.0,
+            y: position.1,
         })
         .with_children(|parent| {
             parent.spawn(PbrBundle {
@@ -183,9 +194,10 @@ pub fn spawn_rook(
             )),
             ..Default::default()
         })
-        .insert(Piece {
-            color: piece.color,
-            kind: piece.kind,
+        .insert(PieceComponent {
+            piece,
+            x: position.0,
+            y: position.1,
         })
         .with_children(|parent| {
             parent.spawn(PbrBundle {
@@ -216,9 +228,10 @@ pub fn spawn_pawn(
             )),
             ..Default::default()
         })
-        .insert(Piece {
-            color: piece.color,
-            kind: piece.kind,
+        .insert(PieceComponent {
+            piece,
+            x: position.0,
+            y: position.1,
         })
         .with_children(|parent| {
             parent.spawn(PbrBundle {
@@ -311,14 +324,14 @@ fn create_pieces(
     }
 }
 
-fn move_pieces(time: Res<Time>, mut query: Query<(&mut Transform, &Piece)>) {
+fn move_pieces(time: Res<Time>, mut query: Query<(&mut Transform, &PieceComponent)>) {
     for (mut transform, piece) in query.iter_mut() {
         // Get the direction to move in
-        // let direction = Vec3::new(piece.x as f32, 0., piece.y as f32) - transform.translation;
+        let direction = Vec3::new(piece.x as f32, 0., piece.y as f32) - transform.translation;
 
         // Only move if the piece isn't already there (distance is big)
-        // if direction.length() > 0.1 {
-        //     transform.translation += direction.normalize() * time.delta_seconds();
-        // }
+        if direction.length() > 0.1 {
+            transform.translation += direction.normalize() * time.delta_seconds();
+        }
     }
 }
