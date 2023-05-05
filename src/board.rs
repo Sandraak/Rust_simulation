@@ -50,7 +50,7 @@ impl FromWorld for SquareColors {
     }
 }
 
-#[derive(Component, Copy, Clone)]
+#[derive(Component, Copy, Clone, Debug)]
 pub struct Square {
     pub x: u8,
     pub y: u8,
@@ -67,7 +67,7 @@ struct SelectedSquare {
     selected: Option<Square>,
 }
 
-#[derive(Default, Resource)]
+#[derive(Default, Resource, Debug)]
 struct SelectedPiece {
     selected: Option<PieceComponent>,
 }
@@ -136,6 +136,7 @@ fn select_square(
     if !mouse_button_inputs.just_pressed(MouseButton::Left) {
         return;
     }
+    info!("mouse pressed");
 
     for (square, interaction) in square_query.iter_mut() {
         if let Interaction::Clicked = interaction {
@@ -143,7 +144,9 @@ fn select_square(
                 .into_iter()
                 .find(|piece| piece.x as u8 == square.x && piece.y as u8 == square.y);
             if optional_piece.is_some() {
-                selected_piece.selected = optional_piece.cloned();
+                selected_piece.selected = optional_piece.copied();
+                info!("piece: {:?}",selected_piece.selected);
+                return;
             }
         }
     }
@@ -151,11 +154,19 @@ fn select_square(
         for (square, interaction) in square_query.iter_mut() {
             if let Interaction::Clicked = interaction {
                 selected_square.selected = Some(*square);
+                info!("selected square: {:?}",selected_square.selected);
             }
         }
     }
     if selected_piece.selected.is_some() && selected_square.selected.is_some() {
+        //volgens mij verplaats ik nu de geclonede piece en niet de echte piece
+        info!("selected_piece BEFORE move: {:?}",selected_piece);
         selected_piece.selected.unwrap().x = selected_square.selected.unwrap().x as usize;
         selected_piece.selected.unwrap().y = selected_square.selected.unwrap().y as usize;
+        // selected_piece.selected.unwrap().y = selected_square.selected.unwrap().y as usize;
+        info!("selected_piece AFTER move: {:?}",selected_piece);
+        // selected_piece.selected = None;
+        // selected_square.selected = None;
+        // info!("selected square en pieces released");
     }
 }

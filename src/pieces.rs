@@ -11,12 +11,14 @@ impl Plugin for PiecesPlugin {
     }
 }
 
-#[derive(Component, Clone, Copy)]
+#[derive(Component, Clone, Copy, Debug)]
 pub struct PieceComponent {
     pub piece: Piece,
     pub x: usize,
     pub y: usize,
 }
+
+
 
 fn spawn_king(
     commands: &mut Commands,
