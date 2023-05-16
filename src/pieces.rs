@@ -11,14 +11,12 @@ impl Plugin for PiecesPlugin {
     }
 }
 
-#[derive(Component, Clone, Copy, Debug)]
+#[derive(Component, Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct PieceComponent {
     pub piece: Piece,
     pub x: usize,
     pub y: usize,
 }
-
-
 
 fn spawn_king(
     commands: &mut Commands,
@@ -266,10 +264,10 @@ fn create_pieces(
     let white_material = materials.add(Color::rgb(1., 0.8, 0.8).into());
     let black_material = materials.add(Color::rgb(0., 0.2, 0.2).into());
 
-    for (position, piece) in state.chess.board.iter().enumerate().flat_map(|(x, row)| {
-        row.iter()
+    for (position, piece) in state.chess.board.iter().enumerate().flat_map(|(row, pieces)| {
+        pieces.iter()
             .enumerate()
-            .map(move |(y, piece)| ((x, y), piece))
+            .map(move |(col, piece)| ((7-row, col), piece))
     }) {
         if let Some(piece) = piece {
             let material = match piece.color {
@@ -334,6 +332,7 @@ fn move_pieces(time: Res<Time>, mut query: Query<(&mut Transform, &PieceComponen
         // Only move if the piece isn't already there (distance is big)
         if direction.length() > 0.1 {
             transform.translation += direction.normalize() * time.delta_seconds();
+            info!("MOVE_PIECE");
         }
     }
 }

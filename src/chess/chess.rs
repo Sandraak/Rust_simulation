@@ -13,6 +13,7 @@ pub struct Chess {
     pub kings: [Pos; 2],
 }
 
+///Board staat nu verkeerd om, ff omdraaien.
 impl Chess {
     pub fn new() -> Self {
         let board = [
@@ -97,6 +98,7 @@ impl Chess {
     }
 
     /// Generates all moves for the given player, even those that would check their own king.
+    /// NEEDS BETTER COMMENTS
     fn unsafe_moves(&self, player: Color) -> impl Iterator<Item = Move> + '_ {
         self.pieces()
             .filter(move |(_, piece)| piece.color == player)

@@ -11,6 +11,7 @@ impl Plugin for BoardPlugin {
             .init_resource::<SelectedSquare>()
             .init_resource::<SelectedPiece>()
             .add_startup_system(create_board)
+            .add_startup_system(create_border)
             .add_system(color_squares)
             .add_system(select_square);
     }
@@ -24,6 +25,7 @@ struct SquareColors {
     black_hovered: Handle<StandardMaterial>,
     white_selected: Handle<StandardMaterial>,
     black_selected: Handle<StandardMaterial>,
+    border: Handle<StandardMaterial>,
 }
 
 impl FromWorld for SquareColors {
@@ -38,6 +40,7 @@ impl FromWorld for SquareColors {
         let black_hovered = materials.add(Color::rgb(0.4, 0.3, 0.3).into());
         let white_selected = materials.add(Color::rgb(0.8, 0.7, 1.0).into());
         let black_selected = materials.add(Color::rgb(0.4, 0.3, 0.6).into());
+        let border = materials.add(Color::rgb(0., 0.2, 0.2).into());
 
         SquareColors {
             white,
@@ -46,6 +49,7 @@ impl FromWorld for SquareColors {
             black_hovered,
             white_selected,
             black_selected,
+            border,
         }
     }
 }
@@ -69,6 +73,7 @@ struct SelectedSquare {
 
 #[derive(Default, Resource, Debug)]
 struct SelectedPiece {
+    ///todo: liffetimes
     selected: Option<PieceComponent>,
 }
 
@@ -90,6 +95,7 @@ fn create_board(
                 .spawn(PbrBundle {
                     mesh: mesh.clone(),
                     // Change material according to position to get alternating pattern
+                    // hier algemenere functie is_white.
                     material: if (i + j + 1) % 2 == 0 {
                         colors.white.clone()
                     } else {
@@ -125,6 +131,31 @@ fn color_squares(
     }
 }
 
+fn create_border(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    colors: Res<SquareColors>,
+) {
+    let mesh = meshes.add(Mesh::from(shape::Plane {
+        size: 1.,
+        ..default()
+    }));
+
+    for i in -1..9 {
+        for j in -2..10{
+        commands
+            .spawn(PbrBundle {
+                mesh: mesh.clone(),
+                material: colors.border.clone(),
+                transform: Transform::from_translation(Vec3::new(i as f32, -0.01, j as f32)),
+                ..Default::default()
+            })
+            .insert(PickableBundle::default());
+        }
+    }
+}
+
+///deze fucntie doet eigenlijk 3 dingen, opslitsen + betere naamgeving
 fn select_square(
     mouse_button_inputs: Res<Input<MouseButton>>,
     mut selected_square: ResMut<SelectedSquare>,
@@ -144,8 +175,9 @@ fn select_square(
                 .into_iter()
                 .find(|piece| piece.x as u8 == square.x && piece.y as u8 == square.y);
             if optional_piece.is_some() {
-                selected_piece.selected = optional_piece.copied();
-                info!("piece: {:?}",selected_piece.selected);
+                // selected piece is not really the optional_piece from the query but a copy of that piece.
+                selected_piece.selected = optional_piece.cloned();
+                info!("piece: {:?}", selected_piece.selected);
                 return;
             }
         }
@@ -154,19 +186,22 @@ fn select_square(
         for (square, interaction) in square_query.iter_mut() {
             if let Interaction::Clicked = interaction {
                 selected_square.selected = Some(*square);
-                info!("selected square: {:?}",selected_square.selected);
+                info!("selected square: {:?}", selected_square.selected);
             }
         }
     }
     if selected_piece.selected.is_some() && selected_square.selected.is_some() {
         //volgens mij verplaats ik nu de geclonede piece en niet de echte piece
-        info!("selected_piece BEFORE move: {:?}",selected_piece);
-        selected_piece.selected.unwrap().x = selected_square.selected.unwrap().x as usize;
-        selected_piece.selected.unwrap().y = selected_square.selected.unwrap().y as usize;
+        info!("selected_piece BEFORE move: {:?}", selected_piece);
+        selected_piece.selected.as_mut().unwrap().x = selected_square.selected.unwrap().x as usize;
+        selected_piece.selected.as_mut().unwrap().y = selected_square.selected.unwrap().y as usize;
+
         // selected_piece.selected.unwrap().y = selected_square.selected.unwrap().y as usize;
-        info!("selected_piece AFTER move: {:?}",selected_piece);
-        // selected_piece.selected = None;
-        // selected_square.selected = None;
+        info!("selected_piece AFTER move: {:?}", selected_piece);
+        selected_piece.selected = None;
+        selected_square.selected = None;
         // info!("selected square en pieces released");
     }
 }
+
+//algemene tip, meteen beginnen met comments plaatsen
