@@ -264,11 +264,18 @@ fn create_pieces(
     let white_material = materials.add(Color::rgb(1., 0.8, 0.8).into());
     let black_material = materials.add(Color::rgb(0., 0.2, 0.2).into());
 
-    for (position, piece) in state.chess.board.iter().enumerate().flat_map(|(row, pieces)| {
-        pieces.iter()
-            .enumerate()
-            .map(move |(col, piece)| ((7-row, col), piece))
-    }) {
+    for (position, piece) in state
+        .chess
+        .board
+        .iter()
+        .enumerate()
+        .flat_map(|(row, pieces)| {
+            pieces
+                .iter()
+                .enumerate()
+                .map(move |(col, piece)| ((7 - row, col), piece))
+        })
+    {
         if let Some(piece) = piece {
             let material = match piece.color {
                 crate::chess::chess::Color::Black => black_material.clone(),
