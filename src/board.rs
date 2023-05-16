@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_mod_picking::{Hover, PickableBundle, Selection};
 
-use crate::{chess::chess::Piece, pieces::PieceComponent};
+use crate::pieces::PieceComponent;
 
 pub struct BoardPlugin;
 
@@ -13,7 +13,7 @@ impl Plugin for BoardPlugin {
             .add_startup_system(create_board)
             .add_startup_system(create_border)
             .add_system(color_squares)
-            .add_system(select_square);
+            .add_system(perform_move);
     }
 }
 
@@ -154,8 +154,7 @@ fn create_border(
     }
 }
 
-// /deze fucntie doet eigenlijk 3 dingen, opslitsen + betere naamgeving
-fn select_square(
+fn perform_move(
     mouse_button_inputs: Res<Input<MouseButton>>,
     mut selected_square: ResMut<SelectedSquare>,
     mut selected_piece: ResMut<SelectedPiece>,
@@ -166,111 +165,42 @@ fn select_square(
     if !mouse_button_inputs.just_pressed(MouseButton::Left) {
         return;
     }
-    info!("mouse pressed");
 
-    for (square, interaction, entity) in square_query.iter_mut() {
+    //selects the piece that will be moved
+    for (square, interaction, _entity) in square_query.iter_mut() {
         if let Interaction::Clicked = interaction {
             let optional_piece = pieces_query
                 .into_iter()
                 .find(|piece| piece.0.x as u8 == square.x && piece.0.y as u8 == square.y);
             if optional_piece.is_some() {
-                // selected piece is not really the optional_piece from the query but a copy of that piece.
+                // Add the identifier of the piece entity to selected_piece. This identifier is later used to query the location of the selected piece.
                 selected_piece.selected = Some(optional_piece.unwrap().1);
-                info!("piece: {:?}", selected_piece.selected);
-                info!("optional_piece: {:?}", optional_piece);
+                info!("selected piece: {:?}", optional_piece);
+                //return so that the selected square won't be the same as the square the selected piece is on.
                 return;
             }
         }
     }
-
-
+    // When a piece is selected, selects a square to where the selected piece will move.
     if selected_piece.selected.is_some() {
-        for (square, interaction, entity) in square_query.iter_mut() {
+        for (square, interaction, _entity) in square_query.iter_mut() {
             if let Interaction::Clicked = interaction {
                 selected_square.selected = Some(*square);
                 info!("selected square: {:?}", selected_square.selected);
             }
         }
     }
+
     if selected_piece.selected.is_some() && selected_square.selected.is_some() {
-
-        info!("let's move");
-        let (mut selected_piece_com, _) = pieces_query.get_mut(selected_piece.selected.unwrap()).unwrap();
-       
-        info!("selected_piece BEFORE move: {:?}", selected_piece);       
-        info!("selected_piece_comp BEFORE move: {:?}", selected_piece_com);
-
+        // Get the PieceComponent of the piece with the identifier that was specified earlier.
+        let (mut selected_piece_com, _) = pieces_query
+            .get_mut(selected_piece.selected.unwrap())
+            .unwrap();
         selected_piece_com.x = selected_square.selected.unwrap().x as usize;
         selected_piece_com.y = selected_square.selected.unwrap().y as usize;
 
+        selected_piece.selected = None;
+        selected_square.selected = None;
+
     }
 }
-
-// fn find_piece_on_square_mut(pieces_query: &mut Query<&mut PieceComponent>, square: &Square) -> Option<Mut<PieceComponent>>{
-//     pieces_query
-//         .iter_mut()
-//         .find(move |piece| piece.x as u8 == square.x && piece.y as u8 == square.y)
-// }
-
-// fn select_piece(
-//     square_query: &mut Query< (&Square, &Interaction)>,
-//     mut pieces_query: Query<&mut PieceComponent>,
-// ) -> Option<Mut<PieceComponent>> {
-//     // let mut selected_piece = None;
-//     square_query.iter_mut().find_map(move |(square, interaction)| {
-//         if let Interaction::Clicked = interaction {
-//             pieces_query
-//             .iter_mut()
-//             .find(move |piece| piece.x as u8 == square.x && piece.y as u8 == square.y)
-//         } else {
-//             None
-//         }
-//     })
-//     // for (square, interaction) in square_query.iter_mut() {
-//     //     if let Interaction::Clicked = interaction {
-//     //             selected_piece = pieces_query
-//     //             .iter_mut()
-//     //             .find(|piece| piece.x as u8 == square.x && piece.y as u8 == square.y);
-//     //             info!("piece: {:?}", selected_piece);
-//     //     }
-//     // }
-//     // selected_piece
-// }
-
-// fn select_square<'a, 'w, 's>(
-//     square_query: &mut Query<'w, 's, (&'a Square, &'a Interaction)>,
-//     selected_piece: &mut Option<Mut<'a, PieceComponent>>,
-// ) -> Option<Square> where 'w: 's, {
-//     let mut selected_square = None;
-//     if selected_piece.is_some() {
-//         for (square, interaction) in square_query.iter_mut() {
-//             if let Interaction::Clicked = interaction {
-//                 selected_square = Some(*square);
-//                 info!("selected square: {:?}", selected_square);
-//             }
-//         }
-//     }
-//     selected_square
-// }
-
-// fn perform_move<'a, 'w, 's>(
-//     mouse_button_inputs: Res<'w, Input<MouseButton>>,
-//     mut square_query: Query<'w, 's, (&'a Square, &'a Interaction)>,
-//     pieces_query: Query<'w, 's, &'a mut PieceComponent>,
-// ) where 'w: 's, {
-//     if !mouse_button_inputs.just_pressed(MouseButton::Left) {
-//         return;
-//     }
-
-//     let mut selected_piece = select_piece(&mut square_query, pieces_query);
-//     let mut selected_square = select_square(&mut square_query, &mut selected_piece);
-
-//     if selected_square.is_some() && selected_piece.is_some() {
-//         selected_piece.as_mut().unwrap().x = selected_square.unwrap().x as usize;
-//         selected_piece.as_mut().unwrap().y = selected_square.unwrap().y as usize;
-//         selected_piece = None;
-//         selected_square = None;
-//     }
-// }
-
-//algemene tip, meteen beginnen met comments plaatsen
