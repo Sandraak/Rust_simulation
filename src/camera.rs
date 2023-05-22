@@ -28,7 +28,7 @@ pub struct PanOrbitCamera {
 impl Default for PanOrbitCamera {
     fn default() -> Self {
         PanOrbitCamera {
-            focus: Vec3::ZERO,
+            focus: Vec3::new(3.5, 0.0, 3.5),
             radius: 5.0,
             upside_down: false,
         }

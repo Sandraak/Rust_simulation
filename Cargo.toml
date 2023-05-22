@@ -9,5 +9,5 @@ edition = "2021"
 
 bevy = "0.10.1"
 bevy_mod_picking = "0.12.0"
-bevy_rapier3d = "0.21.0"
+bevy_rapier3d = { version = "0.21.0", features = ["debug-render-3d"] }
 

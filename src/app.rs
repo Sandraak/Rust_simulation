@@ -1,5 +1,9 @@
 use bevy::{prelude::*, window::WindowResolution};
 use bevy_mod_picking::{DebugCursorPickingPlugin, DefaultPickingPlugins, PickingCameraBundle};
+use bevy_rapier3d::{
+    prelude::{RapierConfiguration, RapierContext, RapierPhysicsPlugin},
+    render::RapierDebugRenderPlugin,
+};
 
 use crate::{board::*, camera, chess::*, physics::*, pieces::*};
 
@@ -16,9 +20,18 @@ pub fn create_app(screen_width: f32, screen_height: f32) -> App {
             }),
             ..default()
         }))
+        .insert_resource(RapierConfiguration {
+            gravity: Vec3::new(0.0, -9.81, 0.0),
+            ..default()
+        })
         .insert_resource(camera::PrimaryWindowResolution { resolution })
         .add_system(camera::pan_orbit_camera)
+        .add_plugin(RapierPhysicsPlugin::<()>::default())
         .add_plugins(DefaultPickingPlugins)
+        .add_plugin(RapierDebugRenderPlugin {
+            always_on_top: true,
+            ..Default::default()
+        })
         .add_plugin(BoardPlugin)
         .add_plugin(PiecesPlugin)
         .add_startup_system(setup);

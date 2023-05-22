@@ -1,9 +1,26 @@
 use bevy::prelude::*;
 use bevy_mod_picking::{Hover, PickableBundle, Selection};
+use bevy_rapier3d::{
+    prelude::{Collider, Restitution, RigidBody},
+    rapier::prelude::{
+        ColliderBuilder, ColliderSet, RigidBodyBuilder, RigidBodySet, RigidBodyType,
+    },
+};
 
 use crate::pieces::PieceComponent;
 
 pub struct BoardPlugin;
+
+const BOARD_LENGTH: f32 = 10.0;
+const BOARD_WIDTH: f32 = 12.0;
+const BOARD_HEIGHT: f32 = 0.25;
+const SMALL_FLOAT: f32 = 0.01;
+
+const BOARD_OFFSET: Vec3 = Vec3::new(
+    0.5 * BOARD_WIDTH - 2.5,
+    -0.5 * BOARD_HEIGHT,
+    0.5 * BOARD_LENGTH - 1.5,
+);
 
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
@@ -135,23 +152,31 @@ fn create_border(
     mut meshes: ResMut<Assets<Mesh>>,
     colors: Res<SquareColors>,
 ) {
-    let mesh = meshes.add(Mesh::from(shape::Plane {
-        size: 1.,
-        ..default()
+    let mesh = meshes.add(Mesh::from(shape::Box {
+        min_x: -1.5,
+        max_x: 8.5,
+        min_y: -0.25,
+        max_y: -SMALL_FLOAT,
+        min_z: -2.5,
+        max_z: 9.5,
     }));
-
-    for i in -1..9 {
-        for j in -2..10 {
-            commands
-                .spawn(PbrBundle {
-                    mesh: mesh.clone(),
-                    material: colors.border.clone(),
-                    transform: Transform::from_translation(Vec3::new(i as f32, -0.01, j as f32)),
-                    ..Default::default()
-                })
-                .insert(PickableBundle::default());
-        }
-    }
+    commands
+        .spawn(PbrBundle {
+            mesh,
+            material: colors.border.clone(),
+            ..default()
+        })
+        .insert(RigidBody::Fixed)
+        .with_children(|children| {
+            children
+                .spawn(Collider::cuboid(
+                    0.5 * BOARD_LENGTH,
+                    0.5 * BOARD_HEIGHT,
+                    0.5 * BOARD_WIDTH,
+                ))
+                .insert(Transform::from_translation(BOARD_OFFSET))
+                .insert(Restitution::coefficient(0.0));
+        });
 }
 
 fn perform_move(
@@ -201,6 +226,5 @@ fn perform_move(
 
         selected_piece.selected = None;
         selected_square.selected = None;
-
     }
 }

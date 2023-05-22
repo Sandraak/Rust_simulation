@@ -1,7 +1,15 @@
 use bevy::prelude::*;
+use bevy_rapier3d::prelude::{
+    Ccd, Collider, ColliderMassProperties, LockedAxes, MassProperties, Restitution, RigidBody, Damping, Friction, CoefficientCombineRule,
+};
 
 use crate::chess::{chess::Piece, BoardState};
 
+const SPAWN_HEIGHT: f32 = 10.0;
+const PIECES_HEIGHT: f32 = 1.75;
+const PIECES_RADIUS: f32 = 0.45;
+const PIECES_OFFSET: Vec3 = Vec3::new(0.0, SPAWN_HEIGHT + 0.5 * PIECES_HEIGHT, 0.0);
+const PIECES_WEIGHT_CENTER :Vec3 =  Vec3::new(0.0, 0.2 * PIECES_HEIGHT, 0.0);
 pub struct PiecesPlugin;
 
 impl Plugin for PiecesPlugin {
@@ -47,7 +55,8 @@ fn spawn_king(
                 mesh,
                 material: material.clone(),
                 transform: {
-                    let transform = Transform::from_translation(Vec3::new(-0.2, 0., -1.9));
+                    let transform =
+                        Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, -1.9));
                     transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
                 },
                 ..Default::default()
@@ -56,11 +65,30 @@ fn spawn_king(
                 mesh: mesh_cross,
                 material,
                 transform: {
-                    let transform = Transform::from_translation(Vec3::new(-0.2, 0., -1.9));
+                    let transform =
+                        Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, -1.9));
                     transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
                 },
                 ..Default::default()
             });
+        })
+        .insert(RigidBody::Dynamic)
+        .with_children(|parent| {
+            parent
+                .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
+                .insert(Transform::from_translation(PIECES_OFFSET))
+                .insert(Restitution::coefficient(0.0))
+                .insert(ColliderMassProperties::MassProperties(MassProperties {
+                    local_center_of_mass: PIECES_WEIGHT_CENTER,
+                    mass: 1.0,
+                    ..default()
+                }))
+                .insert(Damping { linear_damping: 100.0, angular_damping: 100.0 })
+                .insert(Friction {
+                    coefficient: 1.0,
+                    combine_rule: CoefficientCombineRule::Max,
+                });
+                // .insert(LockedAxes::TRANSLATION_LOCKED | LockedAxes::ROTATION_LOCKED);
         });
 }
 
@@ -87,13 +115,14 @@ pub fn spawn_knight(
             x: position.0,
             y: position.1,
         })
+        .insert(RigidBody::Dynamic)
         // Add children to the parent
         .with_children(|parent| {
             parent.spawn(PbrBundle {
                 mesh: mesh_1,
                 material: material.clone(),
                 transform: {
-                    let transform = Transform::from_translation(Vec3::new(-0.2, 0., 0.9));
+                    let transform = Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, 0.9));
                     transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
                 },
                 ..Default::default()
@@ -102,7 +131,7 @@ pub fn spawn_knight(
                 mesh: mesh_2,
                 material,
                 transform: {
-                    let transform = Transform::from_translation(Vec3::new(-0.2, 0., 0.9));
+                    let transform = Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, 0.9));
                     transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
                 },
                 ..Default::default()
@@ -136,12 +165,33 @@ pub fn spawn_queen(
                 mesh,
                 material,
                 transform: {
-                    let transform = Transform::from_translation(Vec3::new(-0.2, 0., -0.95));
+                    let transform =
+                        Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, -0.95));
                     transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
                 },
                 ..Default::default()
             });
+        })
+
+        .insert(RigidBody::Dynamic)
+        .with_children(|parent| {
+            parent
+                .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
+                .insert(Transform::from_translation(PIECES_OFFSET))
+                .insert(Restitution::coefficient(0.0))
+                .insert(ColliderMassProperties::MassProperties(MassProperties {
+                    local_center_of_mass: PIECES_WEIGHT_CENTER,
+                    mass: 1.0,
+                    ..default()
+                }))
+                .insert(Damping { linear_damping: 100.0, angular_damping: 100.0 })
+                .insert(Friction {
+                    coefficient: 1.0,
+                    combine_rule: CoefficientCombineRule::Max,
+                });
+                // .insert(LockedAxes::TRANSLATION_LOCKED | LockedAxes::ROTATION_LOCKED);
         });
+
 }
 
 pub fn spawn_bishop(
@@ -170,7 +220,7 @@ pub fn spawn_bishop(
                 mesh,
                 material,
                 transform: {
-                    let transform = Transform::from_translation(Vec3::new(-0.1, 0., 0.));
+                    let transform = Transform::from_translation(Vec3::new(-0.1, SPAWN_HEIGHT, 0.0));
                     transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
                 },
                 ..Default::default()
@@ -204,7 +254,7 @@ pub fn spawn_rook(
                 mesh,
                 material,
                 transform: {
-                    let transform = Transform::from_translation(Vec3::new(-0.1, 0., 1.8));
+                    let transform = Transform::from_translation(Vec3::new(-0.1, SPAWN_HEIGHT, 1.8));
                     transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
                 },
                 ..Default::default()
@@ -238,7 +288,7 @@ pub fn spawn_pawn(
                 mesh,
                 material,
                 transform: {
-                    let transform = Transform::from_translation(Vec3::new(-0.2, 0., 2.6));
+                    let transform = Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, 2.6));
                     transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
                 },
                 ..Default::default()
