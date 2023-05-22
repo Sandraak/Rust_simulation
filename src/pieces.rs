@@ -1,15 +1,21 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{
-    Ccd, Collider, ColliderMassProperties, LockedAxes, MassProperties, Restitution, RigidBody, Damping, Friction, CoefficientCombineRule,
+    CoefficientCombineRule, Collider, ColliderMassProperties, Friction, MassProperties,
+    Restitution, RigidBody,
 };
 
 use crate::chess::{chess::Piece, BoardState};
 
-const SPAWN_HEIGHT: f32 = 10.0;
+const SPAWN_HEIGHT: f32 = -0.25;
 const PIECES_HEIGHT: f32 = 1.75;
 const PIECES_RADIUS: f32 = 0.45;
-const PIECES_OFFSET: Vec3 = Vec3::new(0.0, SPAWN_HEIGHT + 0.5 * PIECES_HEIGHT, 0.0);
-const PIECES_WEIGHT_CENTER :Vec3 =  Vec3::new(0.0, 0.2 * PIECES_HEIGHT, 0.0);
+const PIECES_OFFSET: Vec3 = Vec3::new(0.0, SPAWN_HEIGHT + 0.66 * PIECES_HEIGHT, 0.0);
+const PIECES_WEIGHT_CENTER: Vec3 = Vec3::new(0.0, 0.1 * PIECES_HEIGHT, 0.0);
+
+const PIECES_MASS: f32 = 0.7;
+const PIECES_FRICTION :f32 = 0.7;
+const PIECES_RESTITUTION: f32 = 0.0;
+
 pub struct PiecesPlugin;
 
 impl Plugin for PiecesPlugin {
@@ -76,19 +82,17 @@ fn spawn_king(
         .with_children(|parent| {
             parent
                 .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
-                .insert(Transform::from_translation(PIECES_OFFSET))
-                .insert(Restitution::coefficient(0.0))
+                .insert(Restitution::coefficient(PIECES_RESTITUTION))
                 .insert(ColliderMassProperties::MassProperties(MassProperties {
                     local_center_of_mass: PIECES_WEIGHT_CENTER,
-                    mass: 1.0,
+                    mass: PIECES_MASS,
                     ..default()
                 }))
-                .insert(Damping { linear_damping: 100.0, angular_damping: 100.0 })
                 .insert(Friction {
-                    coefficient: 1.0,
+                    coefficient: PIECES_FRICTION,
                     combine_rule: CoefficientCombineRule::Max,
-                });
-                // .insert(LockedAxes::TRANSLATION_LOCKED | LockedAxes::ROTATION_LOCKED);
+                })
+                .insert(Transform::from_translation(PIECES_OFFSET));
         });
 }
 
@@ -136,6 +140,22 @@ pub fn spawn_knight(
                 },
                 ..Default::default()
             });
+        })
+        .insert(RigidBody::Dynamic)
+        .with_children(|parent| {
+            parent
+                .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
+                .insert(Restitution::coefficient(PIECES_RESTITUTION))
+                .insert(ColliderMassProperties::MassProperties(MassProperties {
+                    local_center_of_mass: PIECES_WEIGHT_CENTER,
+                    mass: PIECES_MASS,
+                    ..default()
+                }))
+                .insert(Friction {
+                    coefficient: PIECES_FRICTION,
+                    combine_rule: CoefficientCombineRule::Max,
+                })
+                .insert(Transform::from_translation(PIECES_OFFSET));
         });
 }
 
@@ -172,26 +192,22 @@ pub fn spawn_queen(
                 ..Default::default()
             });
         })
-
         .insert(RigidBody::Dynamic)
         .with_children(|parent| {
             parent
                 .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
-                .insert(Transform::from_translation(PIECES_OFFSET))
-                .insert(Restitution::coefficient(0.0))
+                .insert(Restitution::coefficient(PIECES_RESTITUTION))
                 .insert(ColliderMassProperties::MassProperties(MassProperties {
                     local_center_of_mass: PIECES_WEIGHT_CENTER,
-                    mass: 1.0,
+                    mass: PIECES_MASS,
                     ..default()
                 }))
-                .insert(Damping { linear_damping: 100.0, angular_damping: 100.0 })
                 .insert(Friction {
-                    coefficient: 1.0,
+                    coefficient: PIECES_FRICTION,
                     combine_rule: CoefficientCombineRule::Max,
-                });
-                // .insert(LockedAxes::TRANSLATION_LOCKED | LockedAxes::ROTATION_LOCKED);
+                })
+                .insert(Transform::from_translation(PIECES_OFFSET));
         });
-
 }
 
 pub fn spawn_bishop(
@@ -225,6 +241,22 @@ pub fn spawn_bishop(
                 },
                 ..Default::default()
             });
+        })
+        .insert(RigidBody::Dynamic)
+        .with_children(|parent| {
+            parent
+                .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
+                .insert(Restitution::coefficient(PIECES_RESTITUTION))
+                .insert(ColliderMassProperties::MassProperties(MassProperties {
+                    local_center_of_mass: PIECES_WEIGHT_CENTER,
+                    mass: PIECES_MASS,
+                    ..default()
+                }))
+                .insert(Friction {
+                    coefficient: PIECES_FRICTION,
+                    combine_rule: CoefficientCombineRule::Max,
+                })
+                .insert(Transform::from_translation(PIECES_OFFSET));
         });
 }
 
@@ -259,6 +291,22 @@ pub fn spawn_rook(
                 },
                 ..Default::default()
             });
+        })
+        .insert(RigidBody::Dynamic)
+        .with_children(|parent| {
+            parent
+                .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
+                .insert(Restitution::coefficient(PIECES_RESTITUTION))
+                .insert(ColliderMassProperties::MassProperties(MassProperties {
+                    local_center_of_mass: PIECES_WEIGHT_CENTER,
+                    mass: PIECES_MASS,
+                    ..default()
+                }))
+                .insert(Friction {
+                    coefficient: PIECES_FRICTION,
+                    combine_rule: CoefficientCombineRule::Max,
+                })
+                .insert(Transform::from_translation(PIECES_OFFSET));
         });
 }
 
@@ -293,6 +341,22 @@ pub fn spawn_pawn(
                 },
                 ..Default::default()
             });
+        })
+        .insert(RigidBody::Dynamic)
+        .with_children(|parent| {
+            parent
+                .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
+                .insert(Restitution::coefficient(PIECES_RESTITUTION))
+                .insert(ColliderMassProperties::MassProperties(MassProperties {
+                    local_center_of_mass: PIECES_WEIGHT_CENTER,
+                    mass: PIECES_MASS,
+                    ..default()
+                }))
+                .insert(Friction {
+                    coefficient: PIECES_FRICTION,
+                    combine_rule: CoefficientCombineRule::Max,
+                })
+                .insert(Transform::from_translation(PIECES_OFFSET));
         });
 }
 

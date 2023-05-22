@@ -174,8 +174,7 @@ fn create_border(
                     0.5 * BOARD_HEIGHT,
                     0.5 * BOARD_WIDTH,
                 ))
-                .insert(Transform::from_translation(BOARD_OFFSET))
-                .insert(Restitution::coefficient(0.0));
+                .insert(Transform::from_translation(BOARD_OFFSET));
         });
 }
 
