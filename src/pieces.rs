@@ -13,7 +13,7 @@ const PIECES_OFFSET: Vec3 = Vec3::new(0.0, SPAWN_HEIGHT + 0.66 * PIECES_HEIGHT, 
 const PIECES_WEIGHT_CENTER: Vec3 = Vec3::new(0.0, 0.1 * PIECES_HEIGHT, 0.0);
 
 const PIECES_MASS: f32 = 0.7;
-const PIECES_FRICTION :f32 = 0.7;
+const PIECES_FRICTION: f32 = 0.7;
 const PIECES_RESTITUTION: f32 = 0.0;
 
 pub struct PiecesPlugin;
@@ -450,7 +450,7 @@ fn move_pieces(time: Res<Time>, mut query: Query<(&mut Transform, &PieceComponen
         // Get the direction to move in
         let direction = Vec3::new(piece.x as f32, 0., piece.y as f32) - transform.translation;
         // Only move if the piece isn't already there (distance is big)
-        if direction.length() > 0.1 {
+        if direction.length() > 0.05 {
             transform.translation += direction.normalize() * time.delta_seconds();
         }
     }

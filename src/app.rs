@@ -1,11 +1,11 @@
 use bevy::{prelude::*, window::WindowResolution};
 use bevy_mod_picking::{DebugCursorPickingPlugin, DefaultPickingPlugins, PickingCameraBundle};
 use bevy_rapier3d::{
-    prelude::{RapierConfiguration, RapierContext, RapierPhysicsPlugin},
+    prelude::{RapierConfiguration, RapierPhysicsPlugin},
     render::RapierDebugRenderPlugin,
 };
 
-use crate::{board::*, camera, chess::*, physics::*, pieces::*};
+use crate::{board::*, camera, chess::*, pieces::*};
 
 pub fn create_app(screen_width: f32, screen_height: f32) -> App {
     let resolution = WindowResolution::new(screen_width, screen_height);

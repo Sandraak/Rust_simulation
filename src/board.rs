@@ -1,26 +1,26 @@
 use bevy::prelude::*;
 use bevy_mod_picking::{Hover, PickableBundle, Selection};
-use bevy_rapier3d::{
-    prelude::{Collider, Restitution, RigidBody},
-    rapier::prelude::{
-        ColliderBuilder, ColliderSet, RigidBodyBuilder, RigidBodySet, RigidBodyType,
-    },
-};
+use bevy_rapier3d::prelude::{Collider, RigidBody};
 
 use crate::pieces::PieceComponent;
 
 pub struct BoardPlugin;
 
+const SMALL_FLOAT: f32 = 0.01;
 const BOARD_LENGTH: f32 = 10.0;
 const BOARD_WIDTH: f32 = 12.0;
 const BOARD_HEIGHT: f32 = 0.25;
-const SMALL_FLOAT: f32 = 0.01;
 
 const BOARD_OFFSET: Vec3 = Vec3::new(
     0.5 * BOARD_WIDTH - 2.5,
     -0.5 * BOARD_HEIGHT,
     0.5 * BOARD_LENGTH - 1.5,
 );
+
+const MAGNET_HEIGHT: f32 = 0.25;
+const MAGNET_RADIUS: f32 = 0.45;
+
+const MAGNET_OFFSET: Vec3 = Vec3::new(3.5, -BOARD_HEIGHT - 0.5 * MAGNET_HEIGHT, 3.5);
 
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
@@ -29,6 +29,7 @@ impl Plugin for BoardPlugin {
             .init_resource::<SelectedPiece>()
             .add_startup_system(create_board)
             .add_startup_system(create_border)
+            .add_startup_system(create_magnet)
             .add_system(color_squares)
             .add_system(perform_move);
     }
@@ -77,11 +78,11 @@ pub struct Square {
     pub y: u8,
 }
 
-impl Square {
-    fn is_white(&self) -> bool {
-        (self.x + self.y + 1) % 2 == 0
-    }
-}
+// impl Square {
+//     fn is_white(&self) -> bool {
+//         (self.x + self.y + 1) % 2 == 0
+//     }
+// }
 
 #[derive(Default, Resource)]
 struct SelectedSquare {
@@ -91,6 +92,10 @@ struct SelectedSquare {
 #[derive(Default, Resource, Debug)]
 struct SelectedPiece {
     selected: Option<Entity>,
+}
+
+fn is_white(x: u8, y: u8) -> bool {
+    (x + y + 1) % 2 == 0
 }
 
 fn create_board(
@@ -112,7 +117,7 @@ fn create_board(
                     mesh: mesh.clone(),
                     // Change material according to position to get alternating pattern
                     // hier algemenere functie is_white.
-                    material: if (i + j + 1) % 2 == 0 {
+                    material: if is_white(i, j) {
                         colors.white.clone()
                     } else {
                         colors.black.clone()
@@ -132,13 +137,13 @@ fn color_squares(
 ) {
     for (square, mut handle, hover, selection) in query.iter_mut() {
         if selection.selected() {
-            *handle = if square.is_white() {
+            *handle = if is_white(square.x, square.y) {
                 colors.white_selected.clone()
             } else {
                 colors.black_selected.clone()
             }
         } else if hover.hovered() {
-            *handle = if square.is_white() {
+            *handle = if is_white(square.x, square.y) {
                 colors.white_hovered.clone()
             } else {
                 colors.black_hovered.clone()
@@ -178,6 +183,31 @@ fn create_border(
         });
 }
 
+fn create_magnet(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    colors: Res<SquareColors>,
+) {
+    let mesh = meshes.add(Mesh::from(shape::Cylinder {
+        height: MAGNET_HEIGHT,
+        radius: MAGNET_RADIUS,
+        ..default()
+    }));
+    commands
+        .spawn(PbrBundle {
+            mesh,
+            material: colors.white_selected.clone(),
+            transform: Transform::from_translation(MAGNET_OFFSET),
+            ..default()
+        })
+        .insert(RigidBody::KinematicPositionBased)
+        .with_children(|children| {
+            children.spawn(Collider::cylinder(0.5 * MAGNET_HEIGHT, MAGNET_RADIUS));
+            // .insert(Transform::from_translation(Vec3::new(0.0,0.0,0.0)));
+        });
+}
+
+///Allows the user to move a piece to an empty square by clicking on the piece and desired location.
 fn perform_move(
     mouse_button_inputs: Res<Input<MouseButton>>,
     mut selected_square: ResMut<SelectedSquare>,
@@ -190,7 +220,7 @@ fn perform_move(
         return;
     }
 
-    //selects the piece that will be moved
+    //selects the piece that was clicked on
     for (square, interaction, _entity) in square_query.iter_mut() {
         if let Interaction::Clicked = interaction {
             let optional_piece = pieces_query
@@ -214,7 +244,7 @@ fn perform_move(
             }
         }
     }
-
+    // Move the selected piece to the selected square.
     if selected_piece.selected.is_some() && selected_square.selected.is_some() {
         // Get the PieceComponent of the piece with the identifier that was specified earlier.
         let (mut selected_piece_com, _) = pieces_query
