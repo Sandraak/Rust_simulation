@@ -44,6 +44,7 @@ struct SquareColors {
     white_selected: Handle<StandardMaterial>,
     black_selected: Handle<StandardMaterial>,
     border: Handle<StandardMaterial>,
+    magnet: Handle<StandardMaterial>,
 }
 
 impl FromWorld for SquareColors {
@@ -52,13 +53,14 @@ impl FromWorld for SquareColors {
             .get_resource_mut::<Assets<StandardMaterial>>()
             .unwrap();
 
-        let white = materials.add(Color::rgb(0.7, 0.6, 0.6).into());
-        let black = materials.add(Color::rgb(0.3, 0.2, 0.2).into());
-        let white_hovered = materials.add(Color::rgb(0.8, 0.7, 0.7).into());
-        let black_hovered = materials.add(Color::rgb(0.4, 0.3, 0.3).into());
-        let white_selected = materials.add(Color::rgb(0.8, 0.7, 1.0).into());
-        let black_selected = materials.add(Color::rgb(0.4, 0.3, 0.6).into());
-        let border = materials.add(Color::rgb(0., 0.2, 0.2).into());
+        let white = materials.add(Color::rgba(1.0, 1.0, 1.0, 0.5).into());
+        let black = materials.add(Color::rgba(0.0, 0.0, 0.0, 0.5).into());
+        let white_hovered = materials.add(Color::rgba(0.8, 0.7, 0.7, 0.5).into());
+        let black_hovered = materials.add(Color::rgba(0.4, 0.3, 0.3, 0.5).into());
+        let white_selected = materials.add(Color::rgba(0.8, 0.7, 1.0, 0.5).into());
+        let black_selected = materials.add(Color::rgba(0.4, 0.3, 0.6, 0.5).into());
+        let border = materials.add(Color::rgba(0.5, 0.1, 0.1,0.5).into());
+        let magnet =  materials.add(Color::rgb(0.8, 0.7, 1.0).into());
 
         SquareColors {
             white,
@@ -68,6 +70,7 @@ impl FromWorld for SquareColors {
             white_selected,
             black_selected,
             border,
+            magnet,
         }
     }
 }
@@ -77,12 +80,6 @@ pub struct Square {
     pub x: u8,
     pub y: u8,
 }
-
-// impl Square {
-//     fn is_white(&self) -> bool {
-//         (self.x + self.y + 1) % 2 == 0
-//     }
-// }
 
 #[derive(Default, Resource)]
 struct SelectedSquare {
@@ -196,7 +193,7 @@ fn create_magnet(
     commands
         .spawn(PbrBundle {
             mesh,
-            material: colors.white_selected.clone(),
+            material: colors.magnet.clone(),
             transform: Transform::from_translation(MAGNET_OFFSET),
             ..default()
         })
