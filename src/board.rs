@@ -35,6 +35,7 @@ impl Plugin for BoardPlugin {
     }
 }
 
+///Struct with all colors used for the board.
 #[derive(Resource)]
 struct SquareColors {
     white: Handle<StandardMaterial>,
@@ -46,7 +47,7 @@ struct SquareColors {
     border: Handle<StandardMaterial>,
     magnet: Handle<StandardMaterial>,
 }
-
+/// 
 impl FromWorld for SquareColors {
     fn from_world(world: &mut World) -> Self {
         let mut materials = world
@@ -59,8 +60,8 @@ impl FromWorld for SquareColors {
         let black_hovered = materials.add(Color::rgba(0.4, 0.3, 0.3, 0.5).into());
         let white_selected = materials.add(Color::rgba(0.8, 0.7, 1.0, 0.5).into());
         let black_selected = materials.add(Color::rgba(0.4, 0.3, 0.6, 0.5).into());
-        let border = materials.add(Color::rgba(0.5, 0.1, 0.1,0.5).into());
-        let magnet =  materials.add(Color::rgb(0.8, 0.7, 1.0).into());
+        let border = materials.add(Color::rgba(0.5, 0.1, 0.1, 0.5).into());
+        let magnet = materials.add(Color::rgb(0.8, 0.7, 1.0).into());
 
         SquareColors {
             white,
@@ -95,6 +96,9 @@ fn is_white(x: u8, y: u8) -> bool {
     (x + y + 1) % 2 == 0
 }
 
+///Creates the checked pattern that is used on a chessboard.
+/// Each of the squares can be selected or hovered over because it is assigned a pickablebundle.
+/// The bottom left square is on position (0,0).
 fn create_board(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -112,8 +116,6 @@ fn create_board(
             commands
                 .spawn(PbrBundle {
                     mesh: mesh.clone(),
-                    // Change material according to position to get alternating pattern
-                    // hier algemenere functie is_white.
                     material: if is_white(i, j) {
                         colors.white.clone()
                     } else {
@@ -128,6 +130,7 @@ fn create_board(
     }
 }
 
+/// Highlights the hovered or selected square.
 fn color_squares(
     mut query: Query<(&Square, &mut Handle<StandardMaterial>, &Hover, &Selection)>,
     colors: Res<SquareColors>,
@@ -149,6 +152,7 @@ fn color_squares(
     }
 }
 
+///Creates the border around the board, this board is a fixed rigid body and thus not affected by forces and gravity.
 fn create_border(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -180,6 +184,7 @@ fn create_border(
         });
 }
 
+//Creates the magnet, which is a kinematic position based rigid body.
 fn create_magnet(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -200,7 +205,6 @@ fn create_magnet(
         .insert(RigidBody::KinematicPositionBased)
         .with_children(|children| {
             children.spawn(Collider::cylinder(0.5 * MAGNET_HEIGHT, MAGNET_RADIUS));
-            // .insert(Transform::from_translation(Vec3::new(0.0,0.0,0.0)));
         });
 }
 
@@ -212,7 +216,6 @@ fn perform_move(
     mut square_query: Query<(&Square, &Interaction, Entity)>,
     mut pieces_query: Query<(&mut PieceComponent, Entity)>,
 ) {
-    // Only run if the left button is pressed
     if !mouse_button_inputs.just_pressed(MouseButton::Left) {
         return;
     }
