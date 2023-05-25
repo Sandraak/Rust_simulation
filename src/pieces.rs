@@ -446,6 +446,7 @@ fn create_pieces(
     }
 }
 
+///System that constantly checks whether the pieces are on their positions, and moves them towards that position when they are not.
 fn move_pieces(time: Res<Time>, mut query: Query<(&mut Transform, &PieceComponent)>) {
     for (mut transform, piece) in query.iter_mut() {
         // Get the direction to move in

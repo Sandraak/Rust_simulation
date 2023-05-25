@@ -1,4 +1,4 @@
-use bevy::prelude::{*, system_adapter::new};
+use bevy::prelude::*;
 use bevy_mod_picking::{Hover, PickableBundle, Selection};
 use bevy_rapier3d::prelude::{Collider, RigidBody};
 
@@ -19,8 +19,9 @@ const BOARD_OFFSET: Vec3 = Vec3::new(
 
 const MAGNET_HEIGHT: f32 = 0.25;
 const MAGNET_RADIUS: f32 = 0.45;
+const MAGNET_Y: f32 = -BOARD_HEIGHT - 0.5 * MAGNET_HEIGHT;
 
-const MAGNET_OFFSET: Vec3 = Vec3::new(0.0, -BOARD_HEIGHT - 0.5 * MAGNET_HEIGHT, 0.0);
+const MAGNET_OFFSET: Vec3 = Vec3::new(0.0, MAGNET_Y, 0.0);
 
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
@@ -31,8 +32,8 @@ impl Plugin for BoardPlugin {
             .add_startup_system(create_border)
             .add_startup_system(create_magnet)
             .add_system(color_squares)
+            .add_system(move_magnet)
             .add_system(perform_move);
-            // .add_system(move_magnet);
     }
 }
 
@@ -95,9 +96,7 @@ struct SelectedPiece {
 
 #[derive(Component, Copy, Clone, Debug)]
 struct Magnet {
-    x: usize,
-    y: f32,
-    z: usize,
+    pos: Vec3,
 }
 
 fn is_white(x: u8, y: u8) -> bool {
@@ -214,11 +213,7 @@ fn create_magnet(
         .with_children(|children| {
             children.spawn(Collider::cylinder(0.5 * MAGNET_HEIGHT, MAGNET_RADIUS));
         })
-        .insert(Magnet {
-            x: 0,
-            y: -BOARD_HEIGHT - 0.5 * MAGNET_HEIGHT,
-            z: 0,
-        });
+        .insert(Magnet { pos: MAGNET_OFFSET });
 }
 
 ///Allows the user to move a piece to an empty square by clicking on the piece and desired location.
@@ -227,7 +222,8 @@ fn perform_move(
     mut selected_square: ResMut<SelectedSquare>,
     mut selected_piece: ResMut<SelectedPiece>,
     mut square_query: Query<(&Square, &Interaction, Entity)>,
-    mut pieces_query: Query<(&mut PieceComponent, Entity)>
+    mut pieces_query: Query<(&mut PieceComponent, Entity)>,
+    // mut magnet_query: Query<(&mut Magnet, Entity)>
 ) {
     if !mouse_button_inputs.just_pressed(MouseButton::Left) {
         return;
@@ -265,33 +261,21 @@ fn perform_move(
             .unwrap();
         selected_piece_com.x = selected_square.selected.unwrap().x as usize;
         selected_piece_com.y = selected_square.selected.unwrap().y as usize;
- 
-        // set_magnet_position(
-        //     *magnet,
-        //     Magnet {
-        //         x: selected_piece_com.x,
-        //         y: BOARD_HEIGHT - 0.5 * MAGNET_HEIGHT,
-        //         z: selected_piece_com.y,
-        //     },
-        // );
 
         selected_piece.selected = None;
         selected_square.selected = None;
     }
 }
 
-fn set_magnet_position(mut magnet: Magnet, pos: Magnet) {
-    magnet.x = pos.x;
-    magnet.z = pos.z;
+///Hier weer gezeik met lifetimes >:(
+fn set_magnet_pos(mut magnet: Magnet, pos: Magnet) {
+       magnet = pos;
 }
 
-fn move_magnet(pos: Magnet, time: Res<Time>, mut query: Query<(&mut Transform, &Magnet)>) {
+fn move_magnet(time: Res<Time>, mut query: Query<(&mut Transform, &Magnet)>) {
     for (mut transform, magnet) in query.iter_mut() {
-        let direction = Vec3::new(
-            magnet.x as f32,
-            -BOARD_HEIGHT - 0.5 * MAGNET_HEIGHT,
-            magnet.y as f32,
-        ) - transform.translation;
+        let direction =
+            Vec3::new(magnet.pos.x as f32, MAGNET_Y, magnet.pos.y as f32) - transform.translation;
         if direction.length() > 0.05 {
             transform.translation += direction.normalize() * time.delta_seconds();
         }
