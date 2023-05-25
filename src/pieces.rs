@@ -6,6 +6,7 @@ use bevy_rapier3d::prelude::{
 
 use crate::chess::{chess::Piece, BoardState};
 
+//Spawns the pieces slighty in the board to prevent bouncing
 const SPAWN_HEIGHT: f32 = -0.25;
 const PIECES_HEIGHT: f32 = 1.75;
 const PIECES_RADIUS: f32 = 0.45;
