@@ -5,7 +5,7 @@ use bevy_rapier3d::{
     render::RapierDebugRenderPlugin,
 };
 
-use crate::{board::*, camera, chess::*, pieces::*};
+use crate::{board::*, camera, chess::*, frame::*, pieces::*};
 
 pub fn create_app(screen_width: f32, screen_height: f32) -> App {
     let resolution = WindowResolution::new(screen_width, screen_height);
@@ -34,6 +34,7 @@ pub fn create_app(screen_width: f32, screen_height: f32) -> App {
         })
         .add_plugin(BoardPlugin)
         .add_plugin(PiecesPlugin)
+        .add_plugin(FramePlugin)
         .add_startup_system(setup);
 
     #[cfg(debug_assertions)]

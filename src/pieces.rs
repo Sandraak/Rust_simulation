@@ -450,7 +450,8 @@ fn create_pieces(
 fn move_pieces(time: Res<Time>, mut query: Query<(&mut Transform, &PieceComponent)>) {
     for (mut transform, piece) in query.iter_mut() {
         // Get the direction to move in
-        let direction = Vec3::new(piece.target_x as f32, 0., piece.target_y as f32) - transform.translation;
+        let direction =
+            Vec3::new(piece.target_x as f32, 0., piece.target_y as f32) - transform.translation;
         // Only move if the piece isn't already there (distance is big)
         if direction.length() > 0.05 {
             transform.translation += direction.normalize() * time.delta_seconds();

@@ -2,6 +2,7 @@ mod app;
 mod board;
 mod camera;
 mod chess;
+mod frame;
 mod pieces;
 
 fn main() {

@@ -1,29 +1,20 @@
-use bevy::prelude::{shape::Box, *};
+use bevy::prelude::*;
 use bevy_mod_picking::{Hover, PickableBundle, Selection};
-use bevy_rapier3d::{
-    prelude::{Collider, RigidBody},
-};
+use bevy_rapier3d::prelude::{Collider, RigidBody};
 
 use crate::pieces::PieceComponent;
 
-pub struct BoardPlugin;
+pub const SMALL_FLOAT: f32 = 0.01;
 
-const SMALL_FLOAT: f32 = 0.01;
-const BOARD_LENGTH: f32 = 10.0;
-const BOARD_WIDTH: f32 = 12.0;
-const BOARD_HEIGHT: f32 = 0.25;
-
+pub const BOARD_LENGTH: f32 = 10.0;
+pub const BOARD_WIDTH: f32 = 12.0;
+pub const BOARD_HEIGHT: f32 = 0.25;
 const BOARD_OFFSET: Vec3 = Vec3::new(
     0.5 * BOARD_WIDTH - 2.5,
     -0.5 * BOARD_HEIGHT,
     0.5 * BOARD_LENGTH - 1.5,
 );
-
-const MAGNET_HEIGHT: f32 = 0.25;
-const MAGNET_RADIUS: f32 = 0.45;
-const MAGNET_Y: f32 = -BOARD_HEIGHT - 0.5 * MAGNET_HEIGHT;
-
-const MAGNET_OFFSET: Vec3 = Vec3::new(0.0, MAGNET_Y, 0.0);
+pub struct BoardPlugin;
 
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
@@ -32,10 +23,7 @@ impl Plugin for BoardPlugin {
             .init_resource::<SelectedPiece>()
             .add_startup_system(create_board)
             .add_startup_system(create_border)
-            .add_startup_system(create_magnet)
-            .add_startup_system(create_frame)
             .add_system(color_squares)
-            .add_system(move_magnet)
             .add_system(perform_move);
     }
 }
@@ -50,8 +38,6 @@ struct BoardColors {
     white_selected: Handle<StandardMaterial>,
     black_selected: Handle<StandardMaterial>,
     border: Handle<StandardMaterial>,
-    magnet: Handle<StandardMaterial>,
-    frame: Handle<StandardMaterial>,
 }
 ///
 impl FromWorld for BoardColors {
@@ -67,8 +53,6 @@ impl FromWorld for BoardColors {
         let white_selected = materials.add(Color::rgba(0.8, 0.7, 1.0, 0.5).into());
         let black_selected = materials.add(Color::rgba(0.4, 0.3, 0.6, 0.5).into());
         let border = materials.add(Color::rgba(0.5, 0.1, 0.1, 0.5).into());
-        let magnet = materials.add(Color::rgb(0.8, 0.7, 1.0).into());
-        let frame = materials.add(Color::rgb(0.2, 0.2, 1.0).into());
 
         BoardColors {
             white,
@@ -78,8 +62,6 @@ impl FromWorld for BoardColors {
             white_selected,
             black_selected,
             border,
-            magnet,
-            frame,
         }
     }
 }
@@ -98,11 +80,6 @@ struct SelectedSquare {
 #[derive(Default, Resource, Debug)]
 struct SelectedPiece {
     selected: Option<Entity>,
-}
-
-#[derive(Component, Copy, Clone, Debug)]
-struct Magnet{
-    target_pos: Vec2
 }
 
 fn is_white(x: u8, y: u8) -> bool {
@@ -197,136 +174,6 @@ fn create_border(
         });
 }
 
-fn create_frame(commands: Commands, meshes: ResMut<Assets<Mesh>>, colors: Res<BoardColors>) {
-    let frame_shapes = vec![
-        Box {
-            min_x: -2.5,
-            max_x: -2.0,
-            min_y: -1.75,
-            max_y: -1.25,
-            min_z: -3.5,
-            max_z: 10.5,
-        },
-        Box {
-            min_x: 9.0,
-            max_x: 9.5,
-            min_y: -1.75,
-            max_y: -1.25,
-            min_z: -3.5,
-            max_z: 10.5,
-        },
-        Box {
-            min_x: -2.5,
-            max_x: 9.5,
-            min_y: -1.75,
-            max_y: -1.25,
-            min_z: -3.5,
-            max_z: -3.0,
-        },
-        Box {
-            min_x: -2.5,
-            max_x: 9.5,
-            min_y: -1.75,
-            max_y: -1.25,
-            min_z: 10.0,
-            max_z: 10.5,
-        },
-        Box {
-            min_x: -2.5,
-            max_x: -2.0,
-            min_y: -1.25,
-            max_y: -0.25,
-            min_z: 9.0,
-            max_z: 9.5,
-        },
-        Box {
-            min_x: -2.5,
-            max_x: -2.0,
-            min_y: -1.25,
-            max_y: -0.25,
-            min_z: -2.5,
-            max_z: -2.0,
-        },
-        Box {
-            min_x: 9.5,
-            max_x: 9.0,
-            min_y: -1.25,
-            max_y: -0.25,
-            min_z: -2.5,
-            max_z: -2.0,
-        },
-        Box {
-            min_x: -2.5,
-            max_x: -2.0,
-            min_y: -1.25,
-            max_y: -0.25,
-            min_z: 9.0,
-            max_z: 9.5,
-        },
-        Box {
-            min_x: 9.5,
-            max_x: 9.0,
-            min_y: -1.25,
-            max_y: -0.25,
-            min_z: 9.5,
-            max_z: 9.0,
-        },
-    ];
-    create_part_of_frame(commands, meshes, colors, frame_shapes);
-}
-
-fn create_part_of_frame(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    colors: Res<BoardColors>,
-    shapes: Vec<Box>,
-) {
-    for shape in shapes {
-        let mesh = meshes.add(Mesh::from(shape)).clone();
-        commands
-            .spawn(PbrBundle {
-                mesh,
-                material: colors.frame.clone(),
-                ..default()
-            })
-            .insert(RigidBody::Fixed);
-    }
-}
-
-fn create_carrier(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    colors: Res<BoardColors>,
-) {
-}
-
-//Creates the magnet, which is a kinematic position based rigid body.
-fn create_magnet(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    colors: Res<BoardColors>,
-) {
-    let mesh = meshes.add(Mesh::from(shape::Cylinder {
-        height: MAGNET_HEIGHT,
-        radius: MAGNET_RADIUS,
-        ..default()
-    }));
-    commands
-        .spawn(PbrBundle {
-            mesh,
-            material: colors.magnet.clone(),
-            transform: Transform::from_translation(MAGNET_OFFSET),
-            ..default()
-        })
-        .insert(RigidBody::KinematicPositionBased)
-        .with_children(|children| {
-            children.spawn(Collider::cylinder(0.5 * MAGNET_HEIGHT, MAGNET_RADIUS));
-        })
-        .insert(Magnet {
-            target_pos: Vec2 { x: 3.5, y: 3.5 }
-        });
-}
-
 ///Allows the user to move a piece to an empty square by clicking on the piece and desired location.
 fn perform_move(
     mouse_button_inputs: Res<Input<MouseButton>>,
@@ -334,7 +181,7 @@ fn perform_move(
     mut selected_piece: ResMut<SelectedPiece>,
     mut square_query: Query<(&Square, &Interaction, Entity)>,
     mut pieces_query: Query<(&mut PieceComponent, Entity)>,
-    mut magnet_query: Query<&mut Magnet>
+    // mut magnet_query: Query<&mut Magnet>,
 ) {
     if !mouse_button_inputs.just_pressed(MouseButton::Left) {
         return;
@@ -343,9 +190,9 @@ fn perform_move(
     //selects the piece that was clicked on
     for (square, interaction, _entity) in square_query.iter_mut() {
         if let Interaction::Clicked = interaction {
-            let optional_piece = pieces_query
-                .into_iter()
-                .find(|piece| piece.0.target_x as u8 == square.x && piece.0.target_y as u8 == square.y);
+            let optional_piece = pieces_query.into_iter().find(|piece| {
+                piece.0.target_x as u8 == square.x && piece.0.target_y as u8 == square.y
+            });
             if optional_piece.is_some() {
                 // Add the identifier of the piece entity to selected_piece. This identifier is later used to query the location of the selected piece.
                 selected_piece.selected = Some(optional_piece.unwrap().1);
@@ -374,22 +221,12 @@ fn perform_move(
         selected_piece_com.target_x = selected_square.selected.unwrap().x as usize;
         selected_piece_com.target_y = selected_square.selected.unwrap().y as usize;
 
-        if let Ok(mut magnet) = magnet_query.get_single_mut() {
-            magnet.target_pos.x = selected_square.selected.unwrap().x as f32;
-            magnet.target_pos.y = selected_square.selected.unwrap().y as f32;
-        }
+        // if let Ok(mut magnet) = magnet_query.get_single_mut() {
+        //     magnet.target_pos.x = selected_square.selected.unwrap().x as f32;
+        //     magnet.target_pos.y = selected_square.selected.unwrap().y as f32;
+        // }
 
         selected_piece.selected = None;
         selected_square.selected = None;
-    }
-}
-
-fn move_magnet(time: Res<Time>, mut query: Query<(&mut Transform, &Magnet)>) {
-    for (mut transform, magnet) in query.iter_mut() {
-        let direction =
-            Vec3::new(magnet.target_pos.x, MAGNET_Y, magnet.target_pos.y) - transform.translation;
-        if direction.length() > 0.05 {
-            transform.translation += direction.normalize() * time.delta_seconds();
-        }
     }
 }
