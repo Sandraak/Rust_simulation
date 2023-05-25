@@ -29,8 +29,8 @@ impl Plugin for PiecesPlugin {
 #[derive(Component, Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct PieceComponent {
     pub piece: Piece,
-    pub x: usize,
-    pub y: usize,
+    pub target_x: usize,
+    pub target_y: usize,
 }
 
 fn spawn_king(
@@ -53,8 +53,8 @@ fn spawn_king(
         })
         .insert(PieceComponent {
             piece,
-            x: position.0,
-            y: position.1,
+            target_x: position.0,
+            target_y: position.1,
         })
         // Add children to the parent
         .with_children(|parent| {
@@ -117,8 +117,8 @@ pub fn spawn_knight(
         })
         .insert(PieceComponent {
             piece,
-            x: position.0,
-            y: position.1,
+            target_x: position.0,
+            target_y: position.1,
         })
         .insert(RigidBody::Dynamic)
         // Add children to the parent
@@ -178,8 +178,8 @@ pub fn spawn_queen(
         })
         .insert(PieceComponent {
             piece,
-            x: position.0,
-            y: position.1,
+            target_x: position.0,
+            target_y: position.1,
         })
         .with_children(|parent| {
             parent.spawn(PbrBundle {
@@ -229,8 +229,8 @@ pub fn spawn_bishop(
         })
         .insert(PieceComponent {
             piece,
-            x: position.0,
-            y: position.1,
+            target_x: position.0,
+            target_y: position.1,
         })
         .with_children(|parent| {
             parent.spawn(PbrBundle {
@@ -279,8 +279,8 @@ pub fn spawn_rook(
         })
         .insert(PieceComponent {
             piece,
-            x: position.0,
-            y: position.1,
+            target_x: position.0,
+            target_y: position.1,
         })
         .with_children(|parent| {
             parent.spawn(PbrBundle {
@@ -329,8 +329,8 @@ pub fn spawn_pawn(
         })
         .insert(PieceComponent {
             piece,
-            x: position.0,
-            y: position.1,
+            target_x: position.0,
+            target_y: position.1,
         })
         .with_children(|parent| {
             parent.spawn(PbrBundle {
@@ -450,7 +450,7 @@ fn create_pieces(
 fn move_pieces(time: Res<Time>, mut query: Query<(&mut Transform, &PieceComponent)>) {
     for (mut transform, piece) in query.iter_mut() {
         // Get the direction to move in
-        let direction = Vec3::new(piece.x as f32, 0., piece.y as f32) - transform.translation;
+        let direction = Vec3::new(piece.target_x as f32, 0., piece.target_y as f32) - transform.translation;
         // Only move if the piece isn't already there (distance is big)
         if direction.length() > 0.05 {
             transform.translation += direction.normalize() * time.delta_seconds();
