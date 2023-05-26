@@ -7,16 +7,17 @@ use crate::board::*;
 const BAR_Y: f32 = 0.0;
 const BAR_Z: f32 = 0.0;
 const BAR_OFFSET: Vec3 = Vec3::new(
-    0.5 * BOARD_WIDTH - 2.5,
-    -0.5 * BOARD_HEIGHT,
-    0.5 * BOARD_LENGTH - 1.5,
+    0.0,
+    BAR_Y,
+    BAR_Z,
 );
 
-const CARRIER_HEIGHT: f32 = 0.5;
+const CARRIER_Y: f32 = 0.0;
+// const CARRIER_HEIGHT: f32 = 0.5;
 const CARRIER_OFFSET: Vec3 = Vec3::new(
-    0.5 * BOARD_WIDTH - 2.5,
-    -0.5 * BOARD_HEIGHT,
-    0.5 * BOARD_LENGTH - 1.5,
+    0.0,
+    CARRIER_Y,
+    0.0,
 );
 
 const MAGNET_HEIGHT: f32 = 0.5;
@@ -31,8 +32,8 @@ impl Plugin for FramePlugin {
             .add_startup_system(create_frame)
             .add_startup_system(create_moving_bar)
             .add_startup_system(create_carrier)
-            .add_startup_system(create_magnet);
-        // .add_system(move_magnet);
+            .add_startup_system(create_magnet)
+            .add_system(move_magnet);
     }
 }
 #[derive(Resource)]
@@ -48,7 +49,6 @@ impl FromWorld for FrameColors {
         let mut materials = world
             .get_resource_mut::<Assets<StandardMaterial>>()
             .unwrap();
-        // let frame = materials.add(Color::rgb(0.2, 0.2, 1.0).into());
         let frame = materials.add(StandardMaterial {
             base_color: Color::rgb(0.2, 0.2, 1.0),
             metallic: 1.0,
@@ -60,7 +60,6 @@ impl FromWorld for FrameColors {
             ..default()
         });
         let carrier = materials.add(Color::rgb(0.5, 0.3, 0.0).into());
-
         let magnet = materials.add(StandardMaterial {
             base_color: Color::rgb(0.9, 0.9, 0.9),
             metallic: 1.0,
@@ -82,7 +81,6 @@ struct Magnet {
 }
 
 #[derive(Component, Copy, Clone, Debug)]
-
 pub struct Bar {
     pub target_pos: f32,
 }
@@ -139,7 +137,7 @@ fn create_moving_bar(
             ..default()
         })
         .insert(RigidBody::KinematicPositionBased)
-        .insert(Bar { target_pos: 0.0 });
+        .insert(Bar {target_pos: BAR_OFFSET[0] });
 }
 
 fn create_carrier(
@@ -164,7 +162,7 @@ fn create_carrier(
         })
         .insert(RigidBody::KinematicPositionBased)
         .insert(Carrier {
-            target_pos: Vec2 { x: 0.0, y: 0.0 },
+            target_pos: Vec2{x: CARRIER_OFFSET[0], y: CARRIER_OFFSET[2]},
         });
 }
 
@@ -176,21 +174,30 @@ fn move_magnet(
 ) {
     let (mut bar_transform, _, _, _) = bar_query.get_single_mut().unwrap();
     let (mut carrier_transform, _, _, _) = carrier_query.get_single_mut().unwrap();
-    let (mut magnet_transform, _, _, _) = magnet_query.get_single_mut().unwrap();
+    let (mut magnet_transform, magnet, _, _) = magnet_query.get_single_mut().unwrap();
 
-    bar_transform.translation.x = magnet_transform.translation.x;
-    carrier_transform.translation.x = magnet_transform.translation.x;
-    carrier_transform.translation.y = magnet_transform.translation.y;
+    bar_transform.translation.x = magnet_transform.translation.x +1.25;
+    carrier_transform.translation.x = magnet_transform.translation.x +1.25;
+    carrier_transform.translation.z = magnet_transform.translation.z +1.25;
 
-    let magnet_direction = Vec3::new(
-        magnet_transform.translation.x,
-        MAGNET_Y,
-        magnet_transform.translation.y,
-    ) - magnet_transform.translation;
+    let magnet_direction =
+    Vec3::new(magnet.target_pos.x,MAGNET_Y,magnet.target_pos.y) - magnet_transform.translation;
 
-    if magnet_direction.length() > 0.05 {
+    if magnet_direction.length() > 0.1 {
         magnet_transform.translation += magnet_direction.normalize() * time.delta_seconds();
     }
+
+    //test movement
+    // Als ik de target_pos van magnet wil veranderen in een andere functie heb ik een mutable reference nodig.
+    // Hierboven heb ik een immutable reference.
+    // Ga ik daar problemen mee krijgen/ eerder opgelost met Entity??
+    //
+    // else{
+    //         if let Ok((_,mut magnet,_,_)) = magnet_query.get_single_mut() {
+    //         magnet.target_pos.x += 1.0;
+    //         magnet.target_pos.y += 1.0;
+    //     }
+    // }
 }
 
 fn create_frame(commands: Commands, meshes: ResMut<Assets<Mesh>>, colors: Res<FrameColors>) {
