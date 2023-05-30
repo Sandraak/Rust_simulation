@@ -1,20 +1,24 @@
+use std::f32::consts::PI;
+
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{
-    CoefficientCombineRule, Collider, ColliderMassProperties, Friction, MassProperties,
-    Restitution, RigidBody,
+    CoefficientCombineRule, Collider, ColliderMassProperties, ExternalForce, Friction,
+    MassProperties, Restitution, RigidBody,
 };
 
 use crate::chess::{chess::Piece, BoardState};
+use crate::frame::*;
 
 //Spawns the pieces slighty in the board to prevent bouncing
-const SPAWN_HEIGHT: f32 = -0.25;
+const SPAWN_HEIGHT: f32 = 0.0;
 const PIECES_HEIGHT: f32 = 1.75;
 const PIECES_RADIUS: f32 = 0.45;
 const PIECES_OFFSET: Vec3 = Vec3::new(0.0, SPAWN_HEIGHT + 0.66 * PIECES_HEIGHT, 0.0);
-const PIECES_WEIGHT_CENTER: Vec3 = Vec3::new(0.0, 0.1 * PIECES_HEIGHT, 0.0);
+const PIECES_WEIGHT_CENTER: Vec3 = Vec3::new(0.0, 0.5 * PIECES_HEIGHT, 0.0);
+pub const PIECES_MAGNET_STRENGTH: f32 = 1.0;
 
-const PIECES_MASS: f32 = 0.7;
-const PIECES_FRICTION: f32 = 0.7;
+const PIECES_MASS: f32 = 0.5;
+const PIECES_FRICTION: f32 = 0.1;
 const PIECES_RESTITUTION: f32 = 0.0;
 
 pub struct PiecesPlugin;
@@ -56,6 +60,7 @@ fn spawn_king(
             target_x: position.0,
             target_y: position.1,
         })
+        .insert(ExternalForce::default())
         // Add children to the parent
         .with_children(|parent| {
             parent.spawn(PbrBundle {
@@ -121,6 +126,7 @@ pub fn spawn_knight(
             target_y: position.1,
         })
         .insert(RigidBody::Dynamic)
+        .insert(ExternalForce::default())
         // Add children to the parent
         .with_children(|parent| {
             parent.spawn(PbrBundle {
@@ -181,6 +187,7 @@ pub fn spawn_queen(
             target_x: position.0,
             target_y: position.1,
         })
+        .insert(ExternalForce::default())
         .with_children(|parent| {
             parent.spawn(PbrBundle {
                 mesh,
@@ -232,6 +239,7 @@ pub fn spawn_bishop(
             target_x: position.0,
             target_y: position.1,
         })
+        .insert(ExternalForce::default())
         .with_children(|parent| {
             parent.spawn(PbrBundle {
                 mesh,
@@ -282,6 +290,7 @@ pub fn spawn_rook(
             target_x: position.0,
             target_y: position.1,
         })
+        .insert(ExternalForce::default())
         .with_children(|parent| {
             parent.spawn(PbrBundle {
                 mesh,
@@ -332,6 +341,7 @@ pub fn spawn_pawn(
             target_x: position.0,
             target_y: position.1,
         })
+        .insert(ExternalForce::default())
         .with_children(|parent| {
             parent.spawn(PbrBundle {
                 mesh,
@@ -447,14 +457,28 @@ fn create_pieces(
 }
 
 ///System that constantly checks whether the pieces are on their positions, and moves them towards that position when they are not.
-fn move_pieces(time: Res<Time>, mut query: Query<(&mut Transform, &PieceComponent)>) {
-    for (mut transform, piece) in query.iter_mut() {
-        // Get the direction to move in
-        let direction =
-            Vec3::new(piece.target_x as f32, 0., piece.target_y as f32) - transform.translation;
-        // Only move if the piece isn't already there (distance is big)
-        if direction.length() > 0.05 {
-            transform.translation += direction.normalize() * time.delta_seconds();
-        }
+fn move_pieces(
+    mut ext_forces: Query<(&mut ExternalForce, &mut Transform, With<PieceComponent>)>,
+    magnet_query: Query<(&mut Transform, &Magnet, Without<PieceComponent>)>,
+) {
+    let (magnet_transform, _, _) = magnet_query.get_single().unwrap();
+    for (mut piece_force, piece_transform, _) in ext_forces.iter_mut() {
+        let delta = magnet_transform.translation - piece_transform.translation;
+        let direction =  delta.normalize();
+        let distance = delta.length();
+        let force = direction * ((MAGNET_STRENGTH * PIECES_MAGNET_STRENGTH) / (4.0 * PI * distance.powf(2.0)));
+
+        piece_force.force = force;
     }
+
+    // move pieces to clicked square
+    // for (mut transform, piece) in query.iter_mut() {
+    //     // Get the direction to move in
+    //     let direction =
+    //         Vec3::new(piece.target_x as f32, 0., piece.target_y as f32) - transform.translation;
+    //     // Only move if the piece isn't already there (distance is big)
+    //     if direction.length() > 0.05 {
+    //         transform.translation += direction.normalize() * time.delta_seconds();
+    //     }
+    // }
 }

@@ -23,8 +23,8 @@ impl Plugin for BoardPlugin {
             .init_resource::<SelectedPiece>()
             .add_startup_system(create_board)
             .add_startup_system(create_border)
-            .add_system(color_squares)
-            .add_system(perform_move);
+            // .add_system(perform_move);
+            .add_system(color_squares);
     }
 }
 

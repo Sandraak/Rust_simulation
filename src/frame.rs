@@ -6,24 +6,17 @@ use crate::board::*;
 
 const BAR_Y: f32 = 0.0;
 const BAR_Z: f32 = 0.0;
-const BAR_OFFSET: Vec3 = Vec3::new(
-    0.0,
-    BAR_Y,
-    BAR_Z,
-);
+const BAR_OFFSET: Vec3 = Vec3::new(0.0, BAR_Y, BAR_Z);
 
 const CARRIER_Y: f32 = 0.0;
 // const CARRIER_HEIGHT: f32 = 0.5;
-const CARRIER_OFFSET: Vec3 = Vec3::new(
-    0.0,
-    CARRIER_Y,
-    0.0,
-);
+const CARRIER_OFFSET: Vec3 = Vec3::new(0.0, CARRIER_Y, 0.0);
 
 const MAGNET_HEIGHT: f32 = 0.5;
 const MAGNET_RADIUS: f32 = 0.25;
 const MAGNET_Y: f32 = -BOARD_HEIGHT - 0.5 * MAGNET_HEIGHT;
 const MAGNET_OFFSET: Vec3 = Vec3::new(-1.25, MAGNET_Y, -1.25);
+pub const MAGNET_STRENGTH: f32 = 50.0;
 pub struct FramePlugin;
 
 impl Plugin for FramePlugin {
@@ -76,7 +69,7 @@ impl FromWorld for FrameColors {
 }
 
 #[derive(Component, Copy, Clone, Debug)]
-struct Magnet {
+pub struct Magnet {
     target_pos: Vec2,
 }
 
@@ -137,7 +130,9 @@ fn create_moving_bar(
             ..default()
         })
         .insert(RigidBody::KinematicPositionBased)
-        .insert(Bar {target_pos: BAR_OFFSET[0] });
+        .insert(Bar {
+            target_pos: BAR_OFFSET[0],
+        });
 }
 
 fn create_carrier(
@@ -162,13 +157,16 @@ fn create_carrier(
         })
         .insert(RigidBody::KinematicPositionBased)
         .insert(Carrier {
-            target_pos: Vec2{x: CARRIER_OFFSET[0], y: CARRIER_OFFSET[2]},
+            target_pos: Vec2 {
+                x: CARRIER_OFFSET[0],
+                y: CARRIER_OFFSET[2],
+            },
         });
 }
 
 fn move_magnet(
     time: Res<Time>,
-    mut magnet_query: Query<(&mut Transform, &Magnet, Without<Bar>, Without<Carrier>)>,
+    mut magnet_query: Query<(&mut Transform, &mut Magnet, Without<Bar>, Without<Carrier>)>,
     mut bar_query: Query<(&mut Transform, With<Bar>, Without<Magnet>, Without<Carrier>)>,
     mut carrier_query: Query<(&mut Transform, With<Carrier>, Without<Magnet>, Without<Bar>)>,
 ) {
@@ -176,28 +174,23 @@ fn move_magnet(
     let (mut carrier_transform, _, _, _) = carrier_query.get_single_mut().unwrap();
     let (mut magnet_transform, magnet, _, _) = magnet_query.get_single_mut().unwrap();
 
-    bar_transform.translation.x = magnet_transform.translation.x +1.25;
-    carrier_transform.translation.x = magnet_transform.translation.x +1.25;
-    carrier_transform.translation.z = magnet_transform.translation.z +1.25;
+    bar_transform.translation.x = magnet_transform.translation.x + 1.25;
+    carrier_transform.translation.x = magnet_transform.translation.x + 1.25;
+    carrier_transform.translation.z = magnet_transform.translation.z + 1.25;
 
-    let magnet_direction =
-    Vec3::new(magnet.target_pos.x,MAGNET_Y,magnet.target_pos.y) - magnet_transform.translation;
+    let magnet_direction = Vec3::new(magnet.target_pos.x, MAGNET_Y, magnet.target_pos.y)
+        - magnet_transform.translation;
 
-    if magnet_direction.length() > 0.1 {
+    if magnet_direction.length() > 0.01 {
         magnet_transform.translation += magnet_direction.normalize() * time.delta_seconds();
     }
-
     //test movement
-    // Als ik de target_pos van magnet wil veranderen in een andere functie heb ik een mutable reference nodig.
-    // Hierboven heb ik een immutable reference.
-    // Ga ik daar problemen mee krijgen/ eerder opgelost met Entity??
-    //
-    // else{
-    //         if let Ok((_,mut magnet,_,_)) = magnet_query.get_single_mut() {
-    //         magnet.target_pos.x += 1.0;
-    //         magnet.target_pos.y += 1.0;
-    //     }
-    // }
+    else {
+        if let Ok((_, mut magnet, _, _)) = magnet_query.get_single_mut() {
+            magnet.target_pos.x += 0.1;
+            magnet.target_pos.y += 0.1;
+        }
+    }
 }
 
 fn create_frame(commands: Commands, meshes: ResMut<Assets<Mesh>>, colors: Res<FrameColors>) {
