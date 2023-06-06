@@ -9,13 +9,14 @@ use bevy_rapier3d::prelude::{
 use crate::chess::{chess::Piece, BoardState};
 use crate::frame::*;
 
-//Spawns the pieces slighty in the board to prevent bouncing
+// pub const PIECES_MAGNET_STRENGTH: f32 = 1.0;
+
 const SPAWN_HEIGHT: f32 = 0.0;
 const PIECES_HEIGHT: f32 = 1.75;
 const PIECES_RADIUS: f32 = 0.45;
 const PIECES_OFFSET: Vec3 = Vec3::new(0.0, SPAWN_HEIGHT + 0.66 * PIECES_HEIGHT, 0.0);
+const PIECES_TRANSFORM: Vec3 = Vec3::new(0.2, 0.2, 0.2);
 const PIECES_WEIGHT_CENTER: Vec3 = Vec3::new(0.0, 0.5 * PIECES_HEIGHT, 0.0);
-pub const PIECES_MAGNET_STRENGTH: f32 = 1.0;
 
 const PIECES_MASS: f32 = 0.5;
 const PIECES_FRICTION: f32 = 0.1;
@@ -37,6 +38,59 @@ pub struct PieceComponent {
     pub target_y: usize,
 }
 
+fn add_collider(parent: &mut ChildBuilder) {
+    parent
+        .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
+        .insert(Restitution::coefficient(PIECES_RESTITUTION))
+        .insert(ColliderMassProperties::MassProperties(MassProperties {
+            local_center_of_mass: PIECES_WEIGHT_CENTER,
+            mass: PIECES_MASS,
+            ..default()
+        }))
+        .insert(Friction {
+            coefficient: PIECES_FRICTION,
+            combine_rule: CoefficientCombineRule::Max,
+        })
+        .insert(Transform::from_translation(PIECES_OFFSET));
+}
+
+fn set_piece_body_transform(piece: Piece) -> Transform {
+    let piece_body_transform: Transform;
+    match piece.kind {
+        crate::chess::chess::Kind::Pawn => {
+            piece_body_transform = Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, 2.6))
+        }
+        crate::chess::chess::Kind::Rook => {
+            piece_body_transform = Transform::from_translation(Vec3::new(-0.1, SPAWN_HEIGHT, 1.8))
+        }
+        crate::chess::chess::Kind::Knight => {
+            piece_body_transform = Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, 0.9))
+        }
+        crate::chess::chess::Kind::Bishop => {
+            piece_body_transform = Transform::from_translation(Vec3::new(-0.1, SPAWN_HEIGHT, 0.0))
+        }
+        crate::chess::chess::Kind::Queen => {
+            piece_body_transform = Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, -0.95))
+        }
+        crate::chess::chess::Kind::King => {
+            piece_body_transform = Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, -1.9))
+        }
+    }
+    piece_body_transform.with_scale(PIECES_TRANSFORM)
+}
+
+fn set_position(position: (usize, usize)) -> Transform {
+    Transform::from_translation(Vec3::new(position.0 as f32, 0., position.1 as f32))
+}
+
+fn set_piece(piece: Piece, position: (usize, usize)) -> PieceComponent {
+    PieceComponent {
+        piece,
+        target_x: position.0,
+        target_y: position.1,
+    }
+}
+
 fn spawn_king(
     commands: &mut Commands,
     material: Handle<StandardMaterial>,
@@ -48,11 +102,7 @@ fn spawn_king(
     commands
         // Spawn parent entity
         .spawn(PbrBundle {
-            transform: Transform::from_translation(Vec3::new(
-                position.0 as f32,
-                0.,
-                position.1 as f32,
-            )),
+            transform: set_position(position),
             ..Default::default()
         })
         .insert(PieceComponent {
@@ -66,40 +116,19 @@ fn spawn_king(
             parent.spawn(PbrBundle {
                 mesh,
                 material: material.clone(),
-                transform: {
-                    let transform =
-                        Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, -1.9));
-                    transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
-                },
+                transform: set_piece_body_transform(piece),
                 ..Default::default()
             });
+            // .with_children(add_piece_body(piece, mesh, material, parent));
             parent.spawn(PbrBundle {
                 mesh: mesh_cross,
                 material,
-                transform: {
-                    let transform =
-                        Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, -1.9));
-                    transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
-                },
+                transform: set_piece_body_transform(piece),
                 ..Default::default()
             });
         })
         .insert(RigidBody::Dynamic)
-        .with_children(|parent| {
-            parent
-                .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
-                .insert(Restitution::coefficient(PIECES_RESTITUTION))
-                .insert(ColliderMassProperties::MassProperties(MassProperties {
-                    local_center_of_mass: PIECES_WEIGHT_CENTER,
-                    mass: PIECES_MASS,
-                    ..default()
-                }))
-                .insert(Friction {
-                    coefficient: PIECES_FRICTION,
-                    combine_rule: CoefficientCombineRule::Max,
-                })
-                .insert(Transform::from_translation(PIECES_OFFSET));
-        });
+        .with_children(add_collider);
 }
 
 pub fn spawn_knight(
@@ -113,18 +142,10 @@ pub fn spawn_knight(
     commands
         // Spawn parent entity
         .spawn(PbrBundle {
-            transform: Transform::from_translation(Vec3::new(
-                position.0 as f32,
-                0.,
-                position.1 as f32,
-            )),
+            transform: set_position(position),
             ..Default::default()
         })
-        .insert(PieceComponent {
-            piece,
-            target_x: position.0,
-            target_y: position.1,
-        })
+        .insert(set_piece(piece, position))
         .insert(RigidBody::Dynamic)
         .insert(ExternalForce::default())
         // Add children to the parent
@@ -132,38 +153,18 @@ pub fn spawn_knight(
             parent.spawn(PbrBundle {
                 mesh: mesh_1,
                 material: material.clone(),
-                transform: {
-                    let transform = Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, 0.9));
-                    transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
-                },
+                transform: set_piece_body_transform(piece),
                 ..Default::default()
             });
             parent.spawn(PbrBundle {
                 mesh: mesh_2,
                 material,
-                transform: {
-                    let transform = Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, 0.9));
-                    transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
-                },
+                transform: set_piece_body_transform(piece),
                 ..Default::default()
             });
         })
         .insert(RigidBody::Dynamic)
-        .with_children(|parent| {
-            parent
-                .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
-                .insert(Restitution::coefficient(PIECES_RESTITUTION))
-                .insert(ColliderMassProperties::MassProperties(MassProperties {
-                    local_center_of_mass: PIECES_WEIGHT_CENTER,
-                    mass: PIECES_MASS,
-                    ..default()
-                }))
-                .insert(Friction {
-                    coefficient: PIECES_FRICTION,
-                    combine_rule: CoefficientCombineRule::Max,
-                })
-                .insert(Transform::from_translation(PIECES_OFFSET));
-        });
+        .with_children(add_collider);
 }
 
 pub fn spawn_queen(
@@ -175,47 +176,21 @@ pub fn spawn_queen(
 ) {
     commands
         .spawn(PbrBundle {
-            transform: Transform::from_translation(Vec3::new(
-                position.0 as f32,
-                0.,
-                position.1 as f32,
-            )),
+            transform: set_position(position),
             ..Default::default()
         })
-        .insert(PieceComponent {
-            piece,
-            target_x: position.0,
-            target_y: position.1,
-        })
+        .insert(set_piece(piece, position))
         .insert(ExternalForce::default())
         .with_children(|parent| {
             parent.spawn(PbrBundle {
                 mesh,
                 material,
-                transform: {
-                    let transform =
-                        Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, -0.95));
-                    transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
-                },
+                transform: set_piece_body_transform(piece),
                 ..Default::default()
             });
         })
         .insert(RigidBody::Dynamic)
-        .with_children(|parent| {
-            parent
-                .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
-                .insert(Restitution::coefficient(PIECES_RESTITUTION))
-                .insert(ColliderMassProperties::MassProperties(MassProperties {
-                    local_center_of_mass: PIECES_WEIGHT_CENTER,
-                    mass: PIECES_MASS,
-                    ..default()
-                }))
-                .insert(Friction {
-                    coefficient: PIECES_FRICTION,
-                    combine_rule: CoefficientCombineRule::Max,
-                })
-                .insert(Transform::from_translation(PIECES_OFFSET));
-        });
+        .with_children(add_collider);
 }
 
 pub fn spawn_bishop(
@@ -227,46 +202,21 @@ pub fn spawn_bishop(
 ) {
     commands
         .spawn(PbrBundle {
-            transform: Transform::from_translation(Vec3::new(
-                position.0 as f32,
-                0.,
-                position.1 as f32,
-            )),
+            transform: set_position(position),
             ..Default::default()
         })
-        .insert(PieceComponent {
-            piece,
-            target_x: position.0,
-            target_y: position.1,
-        })
+        .insert(set_piece(piece, position))
         .insert(ExternalForce::default())
         .with_children(|parent| {
             parent.spawn(PbrBundle {
                 mesh,
                 material,
-                transform: {
-                    let transform = Transform::from_translation(Vec3::new(-0.1, SPAWN_HEIGHT, 0.0));
-                    transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
-                },
+                transform: set_piece_body_transform(piece),
                 ..Default::default()
             });
         })
         .insert(RigidBody::Dynamic)
-        .with_children(|parent| {
-            parent
-                .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
-                .insert(Restitution::coefficient(PIECES_RESTITUTION))
-                .insert(ColliderMassProperties::MassProperties(MassProperties {
-                    local_center_of_mass: PIECES_WEIGHT_CENTER,
-                    mass: PIECES_MASS,
-                    ..default()
-                }))
-                .insert(Friction {
-                    coefficient: PIECES_FRICTION,
-                    combine_rule: CoefficientCombineRule::Max,
-                })
-                .insert(Transform::from_translation(PIECES_OFFSET));
-        });
+        .with_children(add_collider);
 }
 
 pub fn spawn_rook(
@@ -278,46 +228,21 @@ pub fn spawn_rook(
 ) {
     commands
         .spawn(PbrBundle {
-            transform: Transform::from_translation(Vec3::new(
-                position.0 as f32,
-                0.,
-                position.1 as f32,
-            )),
+            transform: set_position(position),
             ..Default::default()
         })
-        .insert(PieceComponent {
-            piece,
-            target_x: position.0,
-            target_y: position.1,
-        })
+        .insert(set_piece(piece, position))
         .insert(ExternalForce::default())
         .with_children(|parent| {
             parent.spawn(PbrBundle {
                 mesh,
                 material,
-                transform: {
-                    let transform = Transform::from_translation(Vec3::new(-0.1, SPAWN_HEIGHT, 1.8));
-                    transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
-                },
+                transform: set_piece_body_transform(piece),
                 ..Default::default()
             });
         })
         .insert(RigidBody::Dynamic)
-        .with_children(|parent| {
-            parent
-                .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
-                .insert(Restitution::coefficient(PIECES_RESTITUTION))
-                .insert(ColliderMassProperties::MassProperties(MassProperties {
-                    local_center_of_mass: PIECES_WEIGHT_CENTER,
-                    mass: PIECES_MASS,
-                    ..default()
-                }))
-                .insert(Friction {
-                    coefficient: PIECES_FRICTION,
-                    combine_rule: CoefficientCombineRule::Max,
-                })
-                .insert(Transform::from_translation(PIECES_OFFSET));
-        });
+        .with_children(add_collider);
 }
 
 pub fn spawn_pawn(
@@ -329,46 +254,21 @@ pub fn spawn_pawn(
 ) {
     commands
         .spawn(PbrBundle {
-            transform: Transform::from_translation(Vec3::new(
-                position.0 as f32,
-                0.,
-                position.1 as f32,
-            )),
+            transform: set_position(position),
             ..Default::default()
         })
-        .insert(PieceComponent {
-            piece,
-            target_x: position.0,
-            target_y: position.1,
-        })
+        .insert(set_piece(piece, position))
         .insert(ExternalForce::default())
         .with_children(|parent| {
             parent.spawn(PbrBundle {
                 mesh,
                 material,
-                transform: {
-                    let transform = Transform::from_translation(Vec3::new(-0.2, SPAWN_HEIGHT, 2.6));
-                    transform.with_scale(Vec3::new(0.2, 0.2, 0.2))
-                },
+                transform: set_piece_body_transform(piece),
                 ..Default::default()
             });
         })
         .insert(RigidBody::Dynamic)
-        .with_children(|parent| {
-            parent
-                .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
-                .insert(Restitution::coefficient(PIECES_RESTITUTION))
-                .insert(ColliderMassProperties::MassProperties(MassProperties {
-                    local_center_of_mass: PIECES_WEIGHT_CENTER,
-                    mass: PIECES_MASS,
-                    ..default()
-                }))
-                .insert(Friction {
-                    coefficient: PIECES_FRICTION,
-                    combine_rule: CoefficientCombineRule::Max,
-                })
-                .insert(Transform::from_translation(PIECES_OFFSET));
-        });
+        .with_children(add_collider);
 }
 
 fn create_pieces(
@@ -456,7 +356,7 @@ fn create_pieces(
     }
 }
 
-///System that constantly checks whether the pieces are on their positions, and moves them towards that position when they are not.
+///System that constantly checks the distance between a piece and the magnet and executes a force on the piece towards the magnet based on this distance.
 fn move_pieces(
     mut ext_forces: Query<(&mut ExternalForce, &mut Transform, With<PieceComponent>)>,
     magnet_query: Query<(&mut Transform, &Magnet, Without<PieceComponent>)>,
@@ -464,9 +364,9 @@ fn move_pieces(
     let (magnet_transform, _, _) = magnet_query.get_single().unwrap();
     for (mut piece_force, piece_transform, _) in ext_forces.iter_mut() {
         let delta = magnet_transform.translation - piece_transform.translation;
-        let direction =  delta.normalize();
+        let direction = delta.normalize();
         let distance = delta.length();
-        let force = direction * ((MAGNET_STRENGTH * PIECES_MAGNET_STRENGTH) / (4.0 * PI * distance.powf(2.0)));
+        let force = direction * (MAGNET_STRENGTH / (4.0 * PI * distance.powf(2.0)));
 
         piece_force.force = force;
     }

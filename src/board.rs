@@ -179,7 +179,7 @@ fn perform_move(
     mouse_button_inputs: Res<Input<MouseButton>>,
     mut selected_square: ResMut<SelectedSquare>,
     mut selected_piece: ResMut<SelectedPiece>,
-    mut square_query: Query<(&Square, &Interaction, Entity)>,
+    mut square_query: Query<(&Square, &Interaction)>,
     mut pieces_query: Query<(&mut PieceComponent, Entity)>,
     // mut magnet_query: Query<&mut Magnet>,
 ) {
@@ -188,7 +188,7 @@ fn perform_move(
     }
 
     //selects the piece that was clicked on
-    for (square, interaction, _entity) in square_query.iter_mut() {
+    for (square, interaction) in square_query.iter_mut() {
         if let Interaction::Clicked = interaction {
             let optional_piece = pieces_query.into_iter().find(|piece| {
                 piece.0.target_x as u8 == square.x && piece.0.target_y as u8 == square.y
@@ -204,7 +204,7 @@ fn perform_move(
     }
     // When a piece is selected, selects a square to where the selected piece will move.
     if selected_piece.selected.is_some() {
-        for (square, interaction, _entity) in square_query.iter_mut() {
+        for (square, interaction) in square_query.iter_mut() {
             if let Interaction::Clicked = interaction {
                 selected_square.selected = Some(*square);
                 info!("selected square: {:?}", selected_square.selected);
