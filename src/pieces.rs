@@ -9,8 +9,6 @@ use bevy_rapier3d::prelude::{
 use crate::chess::{chess::Piece, BoardState};
 use crate::frame::*;
 
-// pub const PIECES_MAGNET_STRENGTH: f32 = 1.0;
-
 const SPAWN_HEIGHT: f32 = 0.0;
 const PIECES_HEIGHT: f32 = 1.75;
 const PIECES_RADIUS: f32 = 0.45;
@@ -37,7 +35,8 @@ pub struct PieceComponent {
     pub target_x: usize,
     pub target_y: usize,
 }
-
+///Adds a collider to the parent, which in this case would be the piece.
+///The collider contains information about the shape, restitution, mass, friction and position in relation the piece.
 fn add_collider(parent: &mut ChildBuilder) {
     parent
         .spawn(Collider::cylinder(0.5 * PIECES_HEIGHT, PIECES_RADIUS))
@@ -54,6 +53,7 @@ fn add_collider(parent: &mut ChildBuilder) {
         .insert(Transform::from_translation(PIECES_OFFSET));
 }
 
+/// Sets the transform such that the pieces face forward.
 fn set_piece_body_transform(piece: Piece) -> Transform {
     let piece_body_transform: Transform;
     match piece.kind {
@@ -79,10 +79,12 @@ fn set_piece_body_transform(piece: Piece) -> Transform {
     piece_body_transform.with_scale(PIECES_TRANSFORM)
 }
 
+/// Sets the position as a transform.
 fn set_position(position: (usize, usize)) -> Transform {
     Transform::from_translation(Vec3::new(position.0 as f32, 0., position.1 as f32))
 }
 
+/// Creates a PieceComponent from a Piece and a position.
 fn set_piece(piece: Piece, position: (usize, usize)) -> PieceComponent {
     PieceComponent {
         piece,
@@ -100,18 +102,12 @@ fn spawn_king(
     position: (usize, usize),
 ) {
     commands
-        // Spawn parent entity
         .spawn(PbrBundle {
             transform: set_position(position),
             ..Default::default()
         })
-        .insert(PieceComponent {
-            piece,
-            target_x: position.0,
-            target_y: position.1,
-        })
+        .insert(set_piece(piece, position))
         .insert(ExternalForce::default())
-        // Add children to the parent
         .with_children(|parent| {
             parent.spawn(PbrBundle {
                 mesh,
@@ -119,7 +115,6 @@ fn spawn_king(
                 transform: set_piece_body_transform(piece),
                 ..Default::default()
             });
-            // .with_children(add_piece_body(piece, mesh, material, parent));
             parent.spawn(PbrBundle {
                 mesh: mesh_cross,
                 material,
@@ -140,7 +135,6 @@ pub fn spawn_knight(
     position: (usize, usize),
 ) {
     commands
-        // Spawn parent entity
         .spawn(PbrBundle {
             transform: set_position(position),
             ..Default::default()
@@ -148,7 +142,6 @@ pub fn spawn_knight(
         .insert(set_piece(piece, position))
         .insert(RigidBody::Dynamic)
         .insert(ExternalForce::default())
-        // Add children to the parent
         .with_children(|parent| {
             parent.spawn(PbrBundle {
                 mesh: mesh_1,
@@ -271,6 +264,7 @@ pub fn spawn_pawn(
         .with_children(add_collider);
 }
 
+/// Spawns all the pieces on the location they have in the boardstate.
 fn create_pieces(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -356,7 +350,8 @@ fn create_pieces(
     }
 }
 
-///System that constantly checks the distance between a piece and the magnet and executes a force on the piece towards the magnet based on this distance.
+///System that constantly checks the distance between a piece and the magnet.
+/// It then executes a force on the piece towards the magnet based on this distance.
 fn move_pieces(
     mut ext_forces: Query<(&mut ExternalForce, &mut Transform, With<PieceComponent>)>,
     magnet_query: Query<(&mut Transform, &Magnet, Without<PieceComponent>)>,
@@ -370,15 +365,4 @@ fn move_pieces(
 
         piece_force.force = force;
     }
-
-    // move pieces to clicked square
-    // for (mut transform, piece) in query.iter_mut() {
-    //     // Get the direction to move in
-    //     let direction =
-    //         Vec3::new(piece.target_x as f32, 0., piece.target_y as f32) - transform.translation;
-    //     // Only move if the piece isn't already there (distance is big)
-    //     if direction.length() > 0.05 {
-    //         transform.translation += direction.normalize() * time.delta_seconds();
-    //     }
-    // }
 }

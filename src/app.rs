@@ -9,13 +9,12 @@ use crate::{board::*, camera, chess::*, frame::*, pieces::*};
 
 pub fn create_app(screen_width: f32, screen_height: f32) -> App {
     let resolution = WindowResolution::new(screen_width, screen_height);
-    println!("starting app");
     let mut app = App::new();
     app.insert_resource(BoardState::default())
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 resolution: resolution.clone(),
-                title: "Chess".to_owned(),
+                title: "Automatic chessboard simulation".to_owned(),
                 ..default()
             }),
             ..default()
