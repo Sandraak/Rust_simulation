@@ -9,7 +9,6 @@ const BAR_Z: f32 = 0.0;
 const BAR_OFFSET: Vec3 = Vec3::new(0.0, BAR_Y, BAR_Z);
 
 const CARRIER_Y: f32 = 0.0;
-// const CARRIER_HEIGHT: f32 = 0.5;
 const CARRIER_OFFSET: Vec3 = Vec3::new(0.0, CARRIER_Y, 0.0);
 
 const MAGNET_HEIGHT: f32 = 0.5;
@@ -79,10 +78,10 @@ pub struct Bar {
 }
 #[derive(Component, Copy, Clone, Debug)]
 pub struct Carrier {
-    target_pos: Vec2,
+    _target_pos: Vec2,
 }
 
-//Creates the magnet, which is a kinematic position based rigid body.
+//Creates the magnet, which is a cylinder shaped, kinematic position based rigid body.
 fn create_magnet(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -109,6 +108,7 @@ fn create_magnet(
         });
 }
 
+//Creates the moving bar that carries the carrier, which is a box shaped, kinematic position based rigid body.
 fn create_moving_bar(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -135,6 +135,7 @@ fn create_moving_bar(
         });
 }
 
+//Creates the carrier that carries the magnet, which is a box shaped, kinematic position based rigid body.
 fn create_carrier(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -157,13 +158,15 @@ fn create_carrier(
         })
         .insert(RigidBody::KinematicPositionBased)
         .insert(Carrier {
-            target_pos: Vec2 {
+            _target_pos: Vec2 {
                 x: CARRIER_OFFSET[0],
                 y: CARRIER_OFFSET[2],
             },
         });
 }
 
+///System that constantly checks the distance between the desired and true position of magnet.
+/// It moves the magnet towards the desired position as long as this distance is larger than 0.01.
 fn move_magnet(
     time: Res<Time>,
     mut magnet_query: Query<(&mut Transform, &mut Magnet, Without<Bar>, Without<Carrier>)>,
@@ -192,7 +195,7 @@ fn move_magnet(
         }
     }
 }
-
+///The frame consists of 4 bars and 4 pillars on which the board rests, this function creates the frame.
 fn create_frame(commands: Commands, meshes: ResMut<Assets<Mesh>>, colors: Res<FrameColors>) {
     let frame_shapes = vec![
         Box {
@@ -263,6 +266,7 @@ fn create_frame(commands: Commands, meshes: ResMut<Assets<Mesh>>, colors: Res<Fr
     create_part_of_frame(commands, meshes, colors, frame_shapes);
 }
 
+/// Creates the subshapes out of which the whole frame exists.
 fn create_part_of_frame(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
