@@ -2,6 +2,15 @@ use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
 use bevy::render::camera::Projection;
 use bevy::window::WindowResolution;
+use bevy_mod_picking::PickingCameraBundle;
+
+pub struct CameraPlugin;
+
+impl Plugin for CameraPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_startup_system(setup_camera);
+    }
+}
 
 #[derive(Resource)]
 pub struct PrimaryWindowResolution {
@@ -9,7 +18,6 @@ pub struct PrimaryWindowResolution {
 }
 
 pub fn get_primary_window_size(windows: &Res<PrimaryWindowResolution>) -> Vec2 {
-    // let window = windows.get_primary().unwrap();
     Vec2::new(
         windows.resolution.width() as f32,
         windows.resolution.height() as f32,
@@ -33,6 +41,25 @@ impl Default for PanOrbitCamera {
             upside_down: false,
         }
     }
+}
+
+fn setup_camera(mut commands: Commands) {
+    // Camera
+    commands
+        .spawn(Camera3dBundle {
+            transform: Transform::from_matrix(Mat4::from_rotation_translation(
+                Quat::from_xyzw(-0.3, -0.5, -0.3, 0.5).normalize(),
+                Vec3::new(-7.0, 20.0, 4.0),
+            )),
+            ..Default::default()
+        })
+        .insert(PickingCameraBundle::default())
+        .insert(PanOrbitCamera::default());
+    // Light
+    commands.spawn(PointLightBundle {
+        transform: Transform::from_translation(Vec3::new(4.0, 8.0, 4.0)),
+        ..Default::default()
+    });
 }
 
 /// Pan the camera with middle mouse click, zoom with scroll wheel, orbit with right mouse click.
