@@ -30,7 +30,6 @@ pub fn create_app(screen_width: f32, screen_height: f32) -> App {
             ..default()
         })
         .insert_resource(camera::PrimaryWindowResolution { resolution })
-        .add_system(camera::pan_orbit_camera)
         .add_plugin(RapierPhysicsPlugin::<()>::default())
         .add_plugins(DefaultPickingPlugins)
         .add_plugin(RapierDebugRenderPlugin {
@@ -41,7 +40,6 @@ pub fn create_app(screen_width: f32, screen_height: f32) -> App {
         .add_plugin(PiecesPlugin)
         .add_plugin(FramePlugin)
         .add_plugin(CameraPlugin);
-    // .add_startup_system(setup);
 
     #[cfg(debug_assertions)]
     app.add_plugin(DebugCursorPickingPlugin);
