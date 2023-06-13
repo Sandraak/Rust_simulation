@@ -107,3 +107,10 @@ fn a_star(start_node: Node, end_node: Node, boardstate: BoardState) -> Option<Pa
         }
     }
 }
+
+fn move_obstructing_pieces(path : Path, boardstate : BoardState) -> Path{
+    let path :Path =  Path {
+        path: vec![],
+        crossed_pieces: vec![],
+    };
+}
