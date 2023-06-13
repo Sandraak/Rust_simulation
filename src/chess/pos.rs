@@ -3,8 +3,8 @@ use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Pos {
-    x: isize,
-    y: isize,
+    pub x: isize,
+    pub y: isize,
 }
 
 impl Pos {
@@ -18,6 +18,9 @@ impl Pos {
 
     pub fn y(&self) -> isize {
         self.y
+    }
+    pub fn distance(&self, other: Pos) -> isize {
+        (self.x - other.x).abs().max((self.y - other.y).abs())
     }
 }
 

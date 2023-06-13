@@ -3,6 +3,7 @@ mod board;
 mod camera;
 mod chess;
 mod frame;
+mod pathfinding;
 mod pieces;
 
 fn main() {
