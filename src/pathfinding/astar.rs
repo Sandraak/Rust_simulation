@@ -1,11 +1,26 @@
-use crate::chess::{chess::Piece, pos::Pos, BoardState};
+use crate::chess::{pos::Pos, BoardState};
+
+pub const START_NODE :Node = Node{
+    pos: Pos { x: 3, y: 3 },
+    distance_to_start: 0,
+    distance_to_end: 4,
+    parent: None,
+};
+
+pub const END_NODE :Node = Node{
+    pos: Pos { x: 5, y: 5},
+    distance_to_start: 4,
+    distance_to_end: 0,
+    parent: None,
+};
+
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy)]
-struct Node {
+pub struct Node {
     pos: Pos,
     distance_to_start: u8,
     distance_to_end: u8,
-    parent: Option<Pos>,
+    parent: Option<Pos>, //Parent is geen Node want recursieve memory meuk,
 }
 
 impl Node {
@@ -13,12 +28,13 @@ impl Node {
         self.distance_to_start + self.distance_to_end
     }
 }
-struct Path {
+#[derive(Debug)]
+pub struct Path {
     path: Vec<Pos>,
     crossed_pieces: Vec<Pos>,
 }
 
-fn a_star(start_node: Node, end_node: Node, boardstate: BoardState) -> Option<Path> {
+pub fn a_star(start_node: Node, end_node: Node, boardstate: BoardState) -> Option<Path> {
     let mut open_list: Vec<Node> = vec![];
     let mut closed_list: Vec<Node> = vec![];
     let mut path = Path {
@@ -45,6 +61,7 @@ fn a_star(start_node: Node, end_node: Node, boardstate: BoardState) -> Option<Pa
                     path.path.reverse();
                     return Some(path);
                 }
+                //Vind de positie van de parent "node".
                 path_node = *closed_list.iter().find(|node| path_node.parent.unwrap() == node.pos).unwrap(); 
             }
         }
@@ -113,4 +130,6 @@ fn move_obstructing_pieces(path : Path, boardstate : BoardState) -> Path{
         path: vec![],
         crossed_pieces: vec![],
     };
+    path
 }
+
