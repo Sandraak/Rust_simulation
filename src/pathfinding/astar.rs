@@ -24,10 +24,10 @@ pub struct Path {
 }
 
 pub struct Capture {
-    captured_piece : Pos,
+    captured_piece: Pos,
 }
 
-///Finds the shortest path between a start position and end position, based on teh current boardstate.
+///Finds the shortest path on the board between a start and end position, based on the current boardstate.
 pub fn a_star(start_pos: Pos, end_pos: Pos, boardstate: BoardState) -> Option<Path> {
     let start_node: Node = Node {
         pos: start_pos,
@@ -35,6 +35,12 @@ pub fn a_star(start_pos: Pos, end_pos: Pos, boardstate: BoardState) -> Option<Pa
         distance_to_end: start_pos.distance(end_pos) as u8,
         parent: None,
     };
+
+    if !within_bounds(start_pos.x, start_pos.y) || !within_bounds(end_pos.x, end_pos.y) {
+        println!("start or end position not on the board");
+        return None;
+    }
+
     let mut open_list: Vec<Node> = vec![];
     let mut closed_list: Vec<Node> = vec![];
     let mut path = Path {
@@ -57,7 +63,7 @@ pub fn a_star(start_pos: Pos, end_pos: Pos, boardstate: BoardState) -> Option<Pa
             let mut path_node = current;
             loop {
                 //Check if there are any crossed pieces.
-                if boardstate.chess[path_node.pos].is_some() && path_node.pos != start_node.pos{
+                if boardstate.chess[path_node.pos].is_some() && path_node.pos != start_node.pos {
                     path.crossed_pieces.push(path_node.pos);
                 }
                 path.path.push(path_node.pos);
@@ -76,15 +82,15 @@ pub fn a_star(start_pos: Pos, end_pos: Pos, boardstate: BoardState) -> Option<Pa
         //loop through neighbours
         for row in -1..=1 {
             for col in -1..=1 {
-                //if check if it's not itself
-                if !(row == 0 && col == 0) {
+                //check if it's not itself and within the moveable space.
+                if !((row == 0 && col == 0) && within_bounds(row, col)) {
                     let pos = Pos {
                         x: current.pos.x + row,
                         y: current.pos.y + col,
                     };
                     let mut cost = 10;
                     //Check diagonal
-                    if row != 0 && col !=0{
+                    if row != 0 && col != 0 {
                         cost += 5;
                     }
                     // Check whether there is a piece
@@ -126,6 +132,10 @@ pub fn a_star(start_pos: Pos, end_pos: Pos, boardstate: BoardState) -> Option<Pa
             return None;
         }
     }
+}
+
+fn within_bounds(row: isize, col: isize) -> bool {
+    (row >= -1 && row <= 8) && (col >= -1 && col <= 8)
 }
 
 fn move_obstructing_pieces(path: Path, boardstate: BoardState) -> Path {
