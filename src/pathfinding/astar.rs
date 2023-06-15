@@ -1,31 +1,14 @@
-use std::thread::sleep;
-
 use crate::chess::{pos::Pos, BoardState};
 
-// pub const START_NODE: Node = Node {
-//     pos: Pos { x: 3, y: 3 },
-//     distance_to_start: 0,
-//     distance_to_end: 2,
-//     parent: None,
-// };
-
-// pub const END_NODE: Node = Node {
-//     pos: Pos { x: 5, y: 5 },
-//     distance_to_start: 2,
-//     distance_to_end: 0,
-//     parent: None,
-// };
-
-pub const START_POS: Pos = Pos { x: 2, y: 2 };
-
-pub const END_POS: Pos = Pos { x: 7, y: 7 };
+pub const START_POS: Pos = Pos { x: 3, y: 0 };
+pub const END_POS: Pos = Pos { x: 3, y: 7 };
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
 pub struct Node {
     pos: Pos,
     distance_to_start: u8,
     distance_to_end: u8,
-    parent: Option<Pos>, //Parent is geen Node want recursieve memory meuk,
+    parent: Option<Pos>,
 }
 
 impl Node {
@@ -33,12 +16,18 @@ impl Node {
         self.distance_to_start + self.distance_to_end
     }
 }
+///All the positions and crossed pieces in separate vectors
 #[derive(Debug)]
 pub struct Path {
     path: Vec<Pos>,
     crossed_pieces: Vec<Pos>,
 }
 
+pub struct Capture {
+    captured_piece : Pos,
+}
+
+///Finds the shortest path between a start position and end position, based on teh current boardstate.
 pub fn a_star(start_pos: Pos, end_pos: Pos, boardstate: BoardState) -> Option<Path> {
     let start_node: Node = Node {
         pos: start_pos,
@@ -53,41 +42,35 @@ pub fn a_star(start_pos: Pos, end_pos: Pos, boardstate: BoardState) -> Option<Pa
         crossed_pieces: vec![],
     };
     open_list.push(start_node);
-    // print!("closed_list: {:?}", closed_list);
-    // print!("open_list: {:?}", open_list);
 
     loop {
-        // print!("inside the loop");
         //The current node is the one with the shortest total cost in the open list
         let current = *open_list
             .iter()
             .min_by(|a, b| a.total_cost().cmp(&b.total_cost()))?;
         closed_list.push(current);
         open_list.retain(|node| *node != current);
-
-        // println!("open_list2: {:?}", open_list );
-
-
-        // print!("open_list 3: {:?}", open_list);
-
-        
         // Begin bij de laatste node en kijk naar de node met de positie van parent,
         // kijk vervolgens naar zijn parent, doe dit tot de start node, dus tot parent none is.
         if current.pos == end_pos {
             print!("End reached!");
             let mut path_node = current;
             loop {
+                //Check if there are any crossed pieces.
+                if boardstate.chess[path_node.pos].is_some() && path_node.pos != start_node.pos{
+                    path.crossed_pieces.push(path_node.pos);
+                }
                 path.path.push(path_node.pos);
+                //Only the start node doesn't have a parent, so when the node has no parent, we're back at the start.
                 if path_node.parent.is_none() {
                     path.path.reverse();
-                println!("SUCCES!!!");
                     return Some(path);
                 }
-                //Vind de positie van de parent "node".
+                //Find the parent node's position.
                 path_node = *closed_list
-                .iter()
-                .find(|node| path_node.parent.unwrap() == node.pos)
-                .unwrap();
+                    .iter()
+                    .find(|node| path_node.parent.unwrap() == node.pos)
+                    .unwrap();
             }
         }
         //loop through neighbours
@@ -99,14 +82,15 @@ pub fn a_star(start_pos: Pos, end_pos: Pos, boardstate: BoardState) -> Option<Pa
                         x: current.pos.x + row,
                         y: current.pos.y + col,
                     };
+                    let mut cost = 10;
+                    //Check diagonal
+                    if row != 0 && col !=0{
+                        cost += 5;
+                    }
                     // Check whether there is a piece
-                    let mut cost = 1;
-                    // Check if the piece has already been added
+                    // and update the cost for passing through
                     if boardstate.chess[pos].is_some() {
-                        cost = 5;
-                        // if path.crossed_pieces.contains(&pos) {
-                        //     path.crossed_pieces.push(pos);
-                        // }
+                        cost += 40;
                     }
                     let distance_to_start: u8 = current.distance_to_start + cost; // schuin is even snel als rechtdoor
                     let distance = pos.distance(end_pos);
@@ -116,16 +100,8 @@ pub fn a_star(start_pos: Pos, end_pos: Pos, boardstate: BoardState) -> Option<Pa
                         distance_to_end: distance as u8,
                         parent: Some(current.pos),
                     };
-                    // println!("neighbour: {:?}", neighbor.pos);
-
-                    // println!("neigbor of: {:?} is: {:?}", current.pos, neighbor.pos);
                     // When the neighbor is not in the closed list check the open list.
-                    if closed_list
-                        .iter()
-                        .find(|n| neighbor.pos == n.pos)
-                        .is_none()
-                    {
-                        // print!("neigbor not in closed list");
+                    if closed_list.iter().find(|n| neighbor.pos == n.pos).is_none() {
                         //Check whether the neighbour is already in the open list,
                         // if so check if the distance to the startnode is smaller than the previous distance to the start node.
                         // when this is true, update the parent node to the current node and update the distance to the start_node.
@@ -135,27 +111,18 @@ pub fn a_star(start_pos: Pos, end_pos: Pos, boardstate: BoardState) -> Option<Pa
                                     old.parent = Some(current.pos);
                                     old.distance_to_start = distance_to_start;
                                 }
-                                // print!(
-                                //     "node updated, old distance to start {:?}, new : {:?}",
-                                //     old.distance_to_start, neighbor.distance_to_start
-                                // );
                             }
                             //When the neigbor is not already in the open list, add it to the open list.
                             None => {
-                                // neighbor.parent = Some(current.pos);
-                                // neighbor.distance_to_start = distance_to_start;
-                                // neighbor.distance_to_end =
-                                //     neighbor.pos.distance(end_pos) as u8;
                                 open_list.push(neighbor);
-                                // print!("openlist: {:?}", open_list);
                             }
                         }
                     }
                 }
             }
         }
+        //When the open list is empty, there is no path.
         if open_list.is_empty() {
-            println!("OPEN LIST EMPTYY");
             return None;
         }
     }

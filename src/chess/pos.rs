@@ -19,6 +19,7 @@ impl Pos {
     pub fn y(&self) -> isize {
         self.y
     }
+    /// Gives the distance between two points, ignoring additional distance for diagonal movement.
     pub fn distance(&self, other: Pos) -> isize {
         (self.x - other.x).abs().max((self.y - other.y).abs())
     }
