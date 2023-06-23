@@ -1,3 +1,6 @@
+use core::time;
+use std::thread;
+
 // use bevy::prelude::*;
 use bevy::prelude::{shape::Box, *};
 use bevy_rapier3d::prelude::RigidBody;
@@ -71,6 +74,7 @@ impl FromWorld for FrameColors {
 pub struct Magnet {
     target_pos: Vec2,
     on: bool,
+    positions_reached: usize,
 }
 
 #[derive(Component, Copy, Clone, Debug)]
@@ -107,6 +111,7 @@ fn create_magnet(
                 y: MAGNET_OFFSET[2],
             },
             on: false,
+            positions_reached: 0,
         });
 }
 
@@ -166,7 +171,6 @@ fn create_carrier(
             },
         });
 }
-
 ///System that constantly checks the distance between the desired and true position of magnet.
 /// It moves the magnet towards the desired position as long as this distance is larger than 0.01.
 fn move_magnet(
@@ -174,35 +178,57 @@ fn move_magnet(
     mut magnet_query: Query<(&mut Transform, &mut Magnet, Without<Bar>, Without<Carrier>)>,
     mut bar_query: Query<(&mut Transform, With<Bar>, Without<Magnet>, Without<Carrier>)>,
     mut carrier_query: Query<(&mut Transform, With<Carrier>, Without<Magnet>, Without<Bar>)>,
-    // positions: Vec<Pos>,
+    positions: Vec<Pos>,
 ) {
     let (mut bar_transform, _, _, _) = bar_query.get_single_mut().unwrap();
     let (mut carrier_transform, _, _, _) = carrier_query.get_single_mut().unwrap();
-    let (mut magnet_transform, magnet, _, _) = magnet_query.get_single_mut().unwrap();
+    let (mut magnet_transform, mut magnet, _, _) = magnet_query.get_single_mut().unwrap();
 
     bar_transform.translation.x = magnet_transform.translation.x + 1.25;
     carrier_transform.translation.x = magnet_transform.translation.x + 1.25;
     carrier_transform.translation.z = magnet_transform.translation.z + 1.25;
 
-    let positions : Vec<Pos> = vec![Pos{x: 0, y: 0}, Pos{x: 2, y: 2}, Pos {x: 7, y: 2}, Pos{x: 0, y: 0}];
+    // test data
+    // let positions: Vec<Pos> = vec![
+    //     Pos { x: 0, y: 0 },
+    //     Pos { x: 2, y: 2 },
+    //     Pos { x: 7, y: 2 },
+    //     Pos { x: 0, y: 0 },
+    // ];
 
-    
-    
-    for position in positions{
-            let magnet_direction = Vec3::new(magnet.target_pos.x, MAGNET_Y, magnet.target_pos.y)
-                - magnet_transform.translation;
-
-            while magnet_direction.length() > 0.01 {
-                magnet_transform.translation += magnet_direction.normalize() * time.delta_seconds();
-            }
-
-            if let Ok((_, mut magnet, _, _)) = magnet_query.get_single_mut() {
-                magnet.target_pos.x = position.x as f32;
-                magnet.target_pos.y = position.y as f32;
-            }
-
+    let magnet_direction = Vec3::new(magnet.target_pos.x, MAGNET_Y, magnet.target_pos.y)
+        - magnet_transform.translation;
+    // Move magnet towards goal
+    if magnet_direction.length() > 0.01 {
+        magnet_transform.translation += magnet_direction.normalize() * time.delta_seconds();
     }
-    //test movement
+    
+    else {
+        info!(
+            "goal: {:?}, {:?} reached",
+            magnet.target_pos.x, magnet.target_pos.y
+        );
+        // thread::sleep(time::Duration::from_millis(1000));
+        magnet.positions_reached += 1;
+        if let Ok((_, mut magnet, _, _)) = magnet_query.get_single_mut() {
+            if magnet.positions_reached <= positions.len() - 1 {
+                magnet.target_pos.x = positions[magnet.positions_reached].x as f32;
+                magnet.target_pos.y = positions[magnet.positions_reached].y as f32;
+                info!(
+                    "Moving to {:?}, {:?}",
+                    magnet.target_pos.x, magnet.target_pos.y
+                );
+            } else {
+                // End goal has been reached, 
+                info!(
+                    "END goal: {:?}, {:?} reached",
+                    magnet.target_pos.x, magnet.target_pos.y
+                );
+                // Now the function will loop again.
+                magnet.positions_reached = 0;
+            }
+        }
+    }
 }
 ///The frame consists of 4 bars and 4 pillars on which the board rests, this function creates the frame.
 fn create_frame(commands: Commands, meshes: ResMut<Assets<Mesh>>, colors: Res<FrameColors>) {
