@@ -2,7 +2,7 @@
 use bevy::prelude::{shape::Box, *};
 use bevy_rapier3d::prelude::RigidBody;
 
-use crate::board::*;
+use crate::{board::*, chess::pos::Pos};
 
 const BAR_Y: f32 = 0.0;
 const BAR_Z: f32 = 0.0;
@@ -70,6 +70,7 @@ impl FromWorld for FrameColors {
 #[derive(Component, Copy, Clone, Debug)]
 pub struct Magnet {
     target_pos: Vec2,
+    on: bool,
 }
 
 #[derive(Component, Copy, Clone, Debug)]
@@ -105,6 +106,7 @@ fn create_magnet(
                 x: MAGNET_OFFSET[0],
                 y: MAGNET_OFFSET[2],
             },
+            on: false,
         });
 }
 
@@ -172,6 +174,7 @@ fn move_magnet(
     mut magnet_query: Query<(&mut Transform, &mut Magnet, Without<Bar>, Without<Carrier>)>,
     mut bar_query: Query<(&mut Transform, With<Bar>, Without<Magnet>, Without<Carrier>)>,
     mut carrier_query: Query<(&mut Transform, With<Carrier>, Without<Magnet>, Without<Bar>)>,
+    // positions: Vec<Pos>,
 ) {
     let (mut bar_transform, _, _, _) = bar_query.get_single_mut().unwrap();
     let (mut carrier_transform, _, _, _) = carrier_query.get_single_mut().unwrap();
@@ -181,19 +184,25 @@ fn move_magnet(
     carrier_transform.translation.x = magnet_transform.translation.x + 1.25;
     carrier_transform.translation.z = magnet_transform.translation.z + 1.25;
 
-    let magnet_direction = Vec3::new(magnet.target_pos.x, MAGNET_Y, magnet.target_pos.y)
-        - magnet_transform.translation;
+    let positions : Vec<Pos> = vec![Pos{x: 0, y: 0}, Pos{x: 2, y: 2}, Pos {x: 7, y: 2}, Pos{x: 0, y: 0}];
 
-    if magnet_direction.length() > 0.01 {
-        magnet_transform.translation += magnet_direction.normalize() * time.delta_seconds();
+    
+    
+    for position in positions{
+            let magnet_direction = Vec3::new(magnet.target_pos.x, MAGNET_Y, magnet.target_pos.y)
+                - magnet_transform.translation;
+
+            while magnet_direction.length() > 0.01 {
+                magnet_transform.translation += magnet_direction.normalize() * time.delta_seconds();
+            }
+
+            if let Ok((_, mut magnet, _, _)) = magnet_query.get_single_mut() {
+                magnet.target_pos.x = position.x as f32;
+                magnet.target_pos.y = position.y as f32;
+            }
+
     }
     //test movement
-    else {
-        if let Ok((_, mut magnet, _, _)) = magnet_query.get_single_mut() {
-            magnet.target_pos.x += 0.1;
-            magnet.target_pos.y += 0.1;
-        }
-    }
 }
 ///The frame consists of 4 bars and 4 pillars on which the board rests, this function creates the frame.
 fn create_frame(commands: Commands, meshes: ResMut<Assets<Mesh>>, colors: Res<FrameColors>) {
