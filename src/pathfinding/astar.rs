@@ -138,10 +138,13 @@ fn within_bounds(row: isize, col: isize) -> bool {
     (row >= -1 && row <= 8) && (col >= -1 && col <= 8)
 }
 
-fn move_obstructing_pieces(path: Path, boardstate: BoardState) -> Path {
-    let path: Path = Path {
-        path: vec![],
-        crossed_pieces: vec![],
-    };
-    path
+fn move_obstructing_pieces(path: Path, boardstate: BoardState) -> Option<Path> {
+
+
+
+    let new_path = a_star(path.path[0], Pos { x: 0, y: 0 }, boardstate)?;
+
+    Some(new_path)
 }
+
+
