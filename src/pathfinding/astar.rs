@@ -23,8 +23,12 @@ pub struct Path {
     crossed_pieces: Vec<Pos>,
 }
 
-pub struct Capture {
-    captured_piece: Pos,
+struct Locations {
+    from: Pos,
+    to: Pos,
+}
+struct PassedPiece {
+    piece: Vec<Locations>,
 }
 
 ///Finds the shortest path on the board between a start and end position, based on the current boardstate.
@@ -88,15 +92,15 @@ pub fn a_star(start_pos: Pos, end_pos: Pos, boardstate: BoardState) -> Option<Pa
                         x: current.pos.x + row,
                         y: current.pos.y + col,
                     };
-                    let mut cost = 10;
+                    let mut cost = 2;
                     //Check diagonal
                     if row != 0 && col != 0 {
-                        cost += 5;
+                        cost += 1;
                     }
                     // Check whether there is a piece
                     // and update the cost for passing through
                     if boardstate.chess[pos].is_some() {
-                        cost += 40;
+                        cost += 6;
                     }
                     let distance_to_start: u8 = current.distance_to_start + cost; // schuin is even snel als rechtdoor
                     let distance = pos.distance(end_pos);
@@ -138,13 +142,34 @@ fn within_bounds(row: isize, col: isize) -> bool {
     (row >= -1 && row <= 8) && (col >= -1 && col <= 8)
 }
 
+/// Alle obstructing pieces moeten aan de kant
+/// De posities van de obstructing pieces worden op geslagen in path.crossed_pieces.
+/// De functie moet de obstructing pieces verplaatsen naar lege plekken op het bord (dus niet op het pad),
+/// of op plekken waar andere stukken heen verplaatst zijn.
+/// IDEE VOOR DE END POS: Kan ik een locatie vinden waarbij:
+///       pos niet in path.path zit, nog geen ander stuk is heen verplaatst, en boardstate.chess.pos.is_empty()
+///       en dan voor alle posities waarvoor dit geldt, de positie waarbij .distance het laagst is.
+/// Start en eind locatie zijn nu bekend.
+/// pad zoeken tussen die twee
+/// Weer obstructing piece? => herhaal
+/// Geen obstructing piece? => verplaats het laatst gecheckte stuk naar zijn end pos?
+/// PROBLEEM!? Aangezien er op het laatst pas geen obstructing pieces meer zijn,
+///            kan een berekende end pos van een eerder gecheckt stuk plots niet meer vrij zijn.
+/// Oplossingen?
+///            Alles opnieuw checken?
+///            Nevermind, ik neem de nieuwe end pos's al mee bij de onbegaanbare stukken.
 fn move_obstructing_pieces(path: Path, boardstate: BoardState) -> Option<Path> {
-
-
+    let mut moved_pieces: Vec<Locations> = vec![];
 
     let new_path = a_star(path.path[0], Pos { x: 0, y: 0 }, boardstate)?;
-
+    // for position in path.crossed_pieces {
+    //     let start_pos = position;
+    //     let end_pos = boardstate
+    //         .chess
+    //         .board
+    //         .iter()
+    //         .find(|pos| !path.path.contains(pos));
+    //     // if let end_pos = //iterator meuk?
+    // }
     Some(new_path)
 }
-
-
