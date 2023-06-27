@@ -9,9 +9,9 @@ mod pathfinding;
 mod pieces;
 
 fn main() {
-    // let boardstate = chess::BoardState::default();
-    // let path = a_star(START_POS, END_POS, boardstate);
-    // print!("{:?}", path);
-    let mut app = app::create_app(1600.0, 1600.0);
-    app.run();
+    let boardstate = chess::BoardState::default();
+    let path = calculate_path(START_POS, END_POS, &boardstate);
+    print!("{:?}", path);
+    // let mut app = app::create_app(1600.0, 1600.0);
+    // app.run();
 }

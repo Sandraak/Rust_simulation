@@ -17,12 +17,13 @@ impl Node {
     }
 }
 ///All the positions and crossed pieces in separate vectors
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Path {
     path: Vec<Pos>,
     crossed_pieces: Vec<Pos>,
 }
 
+#[derive(Debug, Clone)]
 struct Locations {
     from: Pos,
     to: Pos,
@@ -31,8 +32,63 @@ struct PassedPiece {
     piece: Vec<Locations>,
 }
 
+pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> Option<Vec<Path>> {
+    // Lege vector met de paden
+    let mut paths: Vec<Path> = vec![];
+    // De originele zet
+    let original_path = a_star(start_pos, end_pos, boardstate)?;
+
+    // happie flow >w<
+    // Als de originele zet geen stukken passeert, is er maar 1 pad dat de magneet moet afleggen.
+    if original_path.crossed_pieces.is_empty() {
+        paths.push(original_path.clone());
+        return Some(paths);
+    }
+    // ARGH
+    // Pak het eerste blokkeerende stuk
+    else {
+        let mut obstructing_pieces: Vec<Locations> = vec![];
+        for piece in original_path.crossed_pieces.clone() {
+            let locations = find_end_pos(piece, &original_path, boardstate, &obstructing_pieces);
+            obstructing_pieces.push(locations);
+        }
+        // Er zijn nu nieuwe posities gevonden voor alle stukken die het originele pad blokkeerden.
+        // Voor deze stukken moet ook het optimale pad gevonden worden.
+        for piece in obstructing_pieces.clone() {
+            let path = a_star(piece.from, piece.to, boardstate)?;
+            paths.push(path);
+        }
+
+        //Controleer of er niet nog meer obstructing pieces bijkomen.
+        let mut more_obstructing_pieces = false;
+        for path in paths.clone() {
+            if !path.crossed_pieces.is_empty() {
+                more_obstructing_pieces = true;
+            }
+        }
+
+        // Als er voor elk van deze paden geen nieuwe obstructing pieces zijn
+        // moeten de paden in paths omgedraaid worden uitgevoerd,
+        // wanneer de originele zet is uitgevoerd moeten de stukken worden terug gezet.
+        if more_obstructing_pieces == false {
+            paths.reverse();
+            let mut reversed = obstructing_pieces.clone();
+            reversed.reverse();
+            for piece in reversed {
+                let path_back = a_star(piece.to, piece.from, boardstate)?;
+                paths.push(path_back);
+            }
+        }
+        // Er staat weer een stuk in de weg >:(
+        else if more_obstructing_pieces == true {
+            println!("ARGH BSHJBFJ D:");
+        }
+    }
+    Some(paths)
+}
+
 ///Finds the shortest path on the board between a start and end position, based on the current boardstate.
-pub fn a_star(start_pos: Pos, end_pos: Pos, boardstate: BoardState) -> Option<Path> {
+fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> Option<Path> {
     let start_node: Node = Node {
         pos: start_pos,
         distance_to_start: 0,
@@ -158,18 +214,22 @@ fn within_bounds(row: isize, col: isize) -> bool {
 /// Oplossingen?
 ///            Alles opnieuw checken?
 ///            Nevermind, ik neem de nieuwe end pos's al mee bij de onbegaanbare stukken.
-fn move_obstructing_pieces(path: Path, boardstate: BoardState) -> Option<Path> {
-    let mut moved_pieces: Vec<Locations> = vec![];
-
-    let new_path = a_star(path.path[0], Pos { x: 0, y: 0 }, boardstate)?;
-    // for position in path.crossed_pieces {
-    //     let start_pos = position;
-    //     let end_pos = boardstate
-    //         .chess
-    //         .board
-    //         .iter()
-    //         .find(|pos| !path.path.contains(pos));
-    //     // if let end_pos = //iterator meuk?
-    // }
-    Some(new_path)
+fn find_end_pos(
+    start_pos: Pos,
+    path: &Path,
+    boardstate: &BoardState,
+    locations: &Vec<Locations>,
+) -> Locations {
+    let end_pos = Pos {
+        ..Default::default()
+    };
+    // TODO; Vind een positie die:
+    // 1) niet in path.path zit
+    // 2) niet in locations zit
+    // 3) boardstate.chess[path_node.pos].is_none()
+    // 4) laagste value voor .distance() van de beschikbare locaties
+    Locations {
+        from: start_pos,
+        to: end_pos,
+    }
 }
