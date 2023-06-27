@@ -1,7 +1,12 @@
-use crate::chess::{pos::Pos, BoardState};
+use std::ops::Sub;
+
+use crate::chess::{
+    pos::{Pos, Shift},
+    BoardState,
+};
 
 pub const START_POS: Pos = Pos { x: 3, y: 0 };
-pub const END_POS: Pos = Pos { x: 3, y: 7 };
+pub const END_POS: Pos = Pos { x: 3, y: 3 };
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
 pub struct Node {
@@ -40,8 +45,9 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
 
     // happie flow >w<
     // Als de originele zet geen stukken passeert, is er maar 1 pad dat de magneet moet afleggen.
+    paths.push(original_path.clone());
+
     if original_path.crossed_pieces.is_empty() {
-        paths.push(original_path.clone());
         return Some(paths);
     }
     // ARGH
@@ -57,15 +63,16 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
         for piece in obstructing_pieces.clone() {
             let path = a_star(piece.from, piece.to, boardstate)?;
             paths.push(path);
+            println!("paths nog niet gereversed: {:?} \n", paths);
         }
 
         //Controleer of er niet nog meer obstructing pieces bijkomen.
         let mut more_obstructing_pieces = false;
-        for path in paths.clone() {
-            if !path.crossed_pieces.is_empty() {
-                more_obstructing_pieces = true;
-            }
-        }
+        // for path in paths.clone() {
+        //     if !path.crossed_pieces.is_empty() {
+        //         more_obstructing_pieces = true;
+        //     }
+        // }
 
         // Als er voor elk van deze paden geen nieuwe obstructing pieces zijn
         // moeten de paden in paths omgedraaid worden uitgevoerd,
@@ -74,6 +81,7 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
             paths.reverse();
             let mut reversed = obstructing_pieces.clone();
             reversed.reverse();
+            println!("paths reversed: {:?} \n", paths);
             for piece in reversed {
                 let path_back = a_star(piece.to, piece.from, boardstate)?;
                 paths.push(path_back);
@@ -119,11 +127,13 @@ fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> Option<Path>
         // Begin bij de laatste node en kijk naar de node met de positie van parent,
         // kijk vervolgens naar zijn parent, doe dit tot de start node, dus tot parent none is.
         if current.pos == end_pos {
-            print!("End reached!");
+            println!("End reached!");
             let mut path_node = current;
             loop {
-                //Check if there are any crossed pieces.
-                if boardstate.chess[path_node.pos].is_some() && path_node.pos != start_node.pos {
+                //Check if there are any crossed pieces. ignore the start pos, for now NO CAPTURES< TODO IMPLEMENT SHIZZLE FOR CAPTURE
+                if boardstate.chess[path_node.pos].is_some()
+                    && (path_node.pos != start_node.pos) &&  path_node.pos != end_pos
+                {
                     path.crossed_pieces.push(path_node.pos);
                 }
                 path.path.push(path_node.pos);
@@ -148,15 +158,15 @@ fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> Option<Path>
                         x: current.pos.x + row,
                         y: current.pos.y + col,
                     };
-                    let mut cost = 2;
+                    let mut cost = 4;
                     //Check diagonal
                     if row != 0 && col != 0 {
-                        cost += 1;
+                        cost += 3;
                     }
                     // Check whether there is a piece
                     // and update the cost for passing through
                     if boardstate.chess[pos].is_some() {
-                        cost += 6;
+                        cost += 8;
                     }
                     let distance_to_start: u8 = current.distance_to_start + cost; // schuin is even snel als rechtdoor
                     let distance = pos.distance(end_pos);
@@ -220,9 +230,8 @@ fn find_end_pos(
     boardstate: &BoardState,
     locations: &Vec<Locations>,
 ) -> Locations {
-    let end_pos = Pos {
-        ..Default::default()
-    };
+
+    let end_pos = Pos { x: 2, y: 2 };
     // TODO; Vind een positie die:
     // 1) niet in path.path zit
     // 2) niet in locations zit
