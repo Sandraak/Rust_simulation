@@ -36,7 +36,7 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
     // Lege vector met de paden
     let mut paths: Vec<Path> = vec![];
     // De originele zet
-    let original_path = a_star(start_pos, end_pos, boardstate)?;
+    let mut original_path = a_star(start_pos, end_pos, boardstate)?;
 
     // happie flow >w<
     // Als de originele zet geen stukken passeert, is er maar 1 pad dat de magneet moet afleggen.
@@ -45,27 +45,40 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
     if original_path.crossed_pieces.is_empty() {
         return Some(paths);
     }
-    // ARGH
-    // Pak het eerste blokkeerende stuk
+    // Pak de stukken die het originele pad blokkeren.
     else {
         let mut obstructing_pieces: Vec<Locations> = vec![];
         for piece in original_path.crossed_pieces.clone() {
+            // Vind een goede eind locatie voor het uitwijkende stuk.
             let locations = find_end_pos(piece, &original_path, boardstate, &obstructing_pieces);
+            // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector.
             obstructing_pieces.push(locations);
         }
         // Er zijn nu nieuwe posities gevonden voor alle stukken die het originele pad blokkeerden.
-        // Voor deze stukken moet ook het optimale pad gevonden worden.
+        // Voor deze stukken moet ook het optimale pad gevonden worden. Deze gevonden paden worden ook toegevoegd aan de vector.
         for piece in obstructing_pieces.clone() {
             let path = a_star(piece.from, piece.to, boardstate)?;
             paths.push(path);
-            // println!("paths nog niet gereversed: {:?} \n", paths);
         }
 
+        // Het kan zijn dat een stuk moet uitwijken over een pad waar ook een stuk op staat.
+        // Dit stuk moet dan ook uitwijken.
         // Controleer of er niet nog meer obstructing pieces bijkomen.
+        // Voer hetzelfde riedeltje uit als hierboven.
+        // Nu veel herhalende code, nog ff een loopje van maken, nu nog ene bug waarbij dit maar 1x gebeurd.
         let mut more_obstructing_pieces = false;
         for path in paths.clone() {
-            if !path.crossed_pieces.is_empty() {
+            if !path.crossed_pieces.is_empty() && path.path != original_path.path {
                 more_obstructing_pieces = true;
+                for piece in path.crossed_pieces.clone(){
+                    let locations = find_end_pos(piece, &path, boardstate, &obstructing_pieces);
+                    // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector.
+                    obstructing_pieces.push(locations);
+                }
+                for piece in obstructing_pieces.clone() {
+                    let new_path = a_star(piece.from, piece.to, boardstate)?;
+                    paths.push(new_path);
+                }
             }
         }
 
@@ -83,9 +96,6 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
             }
         }
         // Er staat weer een stuk in de weg >:(
-        else if more_obstructing_pieces == true {
-            println!("ARGH BSHJBFJ D:");
-        }
     }
     Some(paths)
 }
