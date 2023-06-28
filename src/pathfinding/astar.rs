@@ -48,6 +48,7 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
     // Pak de stukken die het originele pad blokkeren.
     else {
         let mut obstructing_pieces: Vec<Locations> = vec![];
+
         for piece in original_path.crossed_pieces.clone() {
             // Vind een goede eind locatie voor het uitwijkende stuk.
             let locations = find_end_pos(piece, &original_path, boardstate, &obstructing_pieces);
@@ -66,18 +67,25 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
         // Controleer of er niet nog meer obstructing pieces bijkomen.
         // Voer hetzelfde riedeltje uit als hierboven.
         // Nu veel herhalende code, nog ff een loopje van maken, nu nog ene bug waarbij dit maar 1x gebeurd.
+
         let mut more_obstructing_pieces = false;
-        for path in paths.clone() {
+        for mut path in paths.clone() {
             if !path.crossed_pieces.is_empty() && path.path != original_path.path {
                 more_obstructing_pieces = true;
-                for piece in path.crossed_pieces.clone(){
-                    let locations = find_end_pos(piece, &path, boardstate, &obstructing_pieces);
-                    // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector.
-                    obstructing_pieces.push(locations);
-                }
-                for piece in obstructing_pieces.clone() {
-                    let new_path = a_star(piece.from, piece.to, boardstate)?;
-                    paths.push(new_path);
+                while more_obstructing_pieces {
+                    for piece in path.crossed_pieces.clone() {
+                        let locations = find_end_pos(piece, &path, boardstate, &obstructing_pieces);
+                        // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector.
+                        obstructing_pieces.push(locations);
+                        path.crossed_pieces.pop();
+                    }
+                    for piece in obstructing_pieces.clone() {
+                        let new_path = a_star(piece.from, piece.to, boardstate)?;
+                        paths.push(new_path);
+                    }
+                    if path.crossed_pieces.is_empty() {
+                        more_obstructing_pieces = false;
+                    }
                 }
             }
         }
@@ -95,7 +103,6 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
                 paths.push(path_back);
             }
         }
-        // Er staat weer een stuk in de weg >:(
     }
     Some(paths)
 }
