@@ -1,12 +1,7 @@
-use std::ops::Sub;
-
-use crate::chess::{
-    pos::{Pos, Shift},
-    BoardState,
-};
+use crate::chess::{chess::Chess, pos::Pos, BoardState};
 
 pub const START_POS: Pos = Pos { x: 3, y: 0 };
-pub const END_POS: Pos = Pos { x: 3, y: 3 };
+pub const END_POS: Pos = Pos { x: 3, y: 7 };
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
 pub struct Node {
@@ -63,16 +58,16 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
         for piece in obstructing_pieces.clone() {
             let path = a_star(piece.from, piece.to, boardstate)?;
             paths.push(path);
-            println!("paths nog niet gereversed: {:?} \n", paths);
+            // println!("paths nog niet gereversed: {:?} \n", paths);
         }
 
-        //Controleer of er niet nog meer obstructing pieces bijkomen.
+        // Controleer of er niet nog meer obstructing pieces bijkomen.
         let mut more_obstructing_pieces = false;
-        // for path in paths.clone() {
-        //     if !path.crossed_pieces.is_empty() {
-        //         more_obstructing_pieces = true;
-        //     }
-        // }
+        for path in paths.clone() {
+            if !path.crossed_pieces.is_empty() {
+                more_obstructing_pieces = true;
+            }
+        }
 
         // Als er voor elk van deze paden geen nieuwe obstructing pieces zijn
         // moeten de paden in paths omgedraaid worden uitgevoerd,
@@ -81,7 +76,7 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
             paths.reverse();
             let mut reversed = obstructing_pieces.clone();
             reversed.reverse();
-            println!("paths reversed: {:?} \n", paths);
+            // println!("paths reversed: {:?} \n", paths);
             for piece in reversed {
                 let path_back = a_star(piece.to, piece.from, boardstate)?;
                 paths.push(path_back);
@@ -132,7 +127,8 @@ fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> Option<Path>
             loop {
                 //Check if there are any crossed pieces. ignore the start pos, for now NO CAPTURES< TODO IMPLEMENT SHIZZLE FOR CAPTURE
                 if boardstate.chess[path_node.pos].is_some()
-                    && (path_node.pos != start_node.pos) &&  path_node.pos != end_pos
+                    && (path_node.pos != start_node.pos)
+                    && path_node.pos != end_pos
                 {
                     path.crossed_pieces.push(path_node.pos);
                 }
@@ -230,8 +226,22 @@ fn find_end_pos(
     boardstate: &BoardState,
     locations: &Vec<Locations>,
 ) -> Locations {
+    let end_pos = Chess::board_positions()
+        .filter(|pos| !path.path.contains(pos))
+        .filter(|pos| {
+            locations
+                .iter()
+                .flat_map(|location| vec![location.from, location.to])
+                .find(|p| p == pos)
+                .is_none()
+        })
+        .filter(|pos| boardstate.chess[pos].is_none())
+        .min_by(|a, b| a.distance(start_pos).cmp(&b.distance(start_pos)))
+        .unwrap();
+    // hier vergelijk ik de distance van a tot de start_pos en de distance van b tot de start pos.
+    // cmp returnt ordering::greater als de a.distance(start_pos) groter is dan b.distance(start_pos).
+    // Hij vergelijkt dit voor alle mogelijke posities.
 
-    let end_pos = Pos { x: 2, y: 2 };
     // TODO; Vind een positie die:
     // 1) niet in path.path zit
     // 2) niet in locations zit

@@ -76,7 +76,7 @@ impl Chess {
     }
 
     /// Returns an iterator over all positions of a chess board.
-    fn board_positions() -> impl Iterator<Item = Pos> {
+    pub fn board_positions() -> impl Iterator<Item = Pos> {
         (0..8).flat_map(|x| (0..8).map(move |y| Pos::new(x, y)))
     }
 
