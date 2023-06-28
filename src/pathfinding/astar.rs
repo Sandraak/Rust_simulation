@@ -37,8 +37,6 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
     let mut paths: Vec<Path> = vec![];
     // De originele zet
     let mut original_path = a_star(start_pos, end_pos, boardstate)?;
-
-    // happie flow >w<
     // Als de originele zet geen stukken passeert, is er maar 1 pad dat de magneet moet afleggen.
     paths.push(original_path.clone());
 
@@ -63,7 +61,6 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
             let path = a_star(piece.from, piece.to, boardstate)?;
             paths.push(path);
         }
-
         // Het kan zijn dat een stuk moet uitwijken over een pad waar ook een stuk op staat.
         // Dit stuk moet dan ook uitwijken.
         // Controleer of er niet nog meer obstructing pieces bijkomen.
@@ -79,7 +76,6 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
                         // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector.
                         obstructing_pieces.push(locations);
                         path.crossed_pieces.pop();
-                        println!("popped tha crossed pieces on other path: {:?}", path);
                     }
                     for piece in obstructing_pieces.clone() {
                         let new_path = a_star(piece.from, piece.to, boardstate)?;
@@ -89,16 +85,11 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
                 }
             }
         }
-
         // Als er voor elk van deze paden geen nieuwe obstructing pieces zijn
         // moeten de paden in paths omgedraaid worden uitgevoerd,
         // wanneer de originele zet is uitgevoerd moeten de stukken worden terug gezet.
-
-        println!("PATHS: {:?}", paths);
         paths.reverse();
         let reversed = obstructing_pieces.clone();
-        // reversed.reverse();
-        // println!("paths reversed: {:?} \n", paths);
         for piece in reversed {
             let path_back = a_star(piece.to, piece.from, boardstate)?;
             paths.push(path_back);
@@ -232,17 +223,22 @@ fn within_bounds(row: isize, col: isize) -> bool {
 /// pad zoeken tussen die twee
 /// Weer obstructing piece? => herhaal
 /// Geen obstructing piece? => verplaats het laatst gecheckte stuk naar zijn end pos?
-/// PROBLEEM!? Aangezien er op het laatst pas geen obstructing pieces meer zijn,
-///            kan een berekende end pos van een eerder gecheckt stuk plots niet meer vrij zijn.
+/// PROBLEEM?   De boardstate wordt tijdens het vinden van een pad niet geupdate
+///             Hierdoor worden de oude locaties van stukken die uit de weg gaan niet als vrij gezien.
+///             Deze als vrij markeren is ook geen oplossing want ze later zijn ze wellicht wel bezet  
 /// Oplossingen?
-///            Alles opnieuw checken?
-///            Nevermind, ik neem de nieuwe end pos's al mee bij de onbegaanbare stukken.
+///            Alles steeds opnieuw checken?
 fn find_end_pos(
     start_pos: Pos,
     paths: &Vec<Path>,
     boardstate: &BoardState,
     locations: &Vec<Locations>,
 ) -> Locations {
+    // Vind een positie die:
+    // 1) niet in path.path zit
+    // 2) niet in locations.to zit
+    // 3) waar geen stuk staat, aka boardstate.chess[path_node.pos].is_none()
+    // 4) laagste value voor .distance() van de locaties die aan bovenstaande punten voldoen.
     let end_pos = Chess::board_positions()
         .filter(|pos| {
             paths
@@ -250,26 +246,20 @@ fn find_end_pos(
                 .flat_map(|path| path.path.iter())
                 .find(|p| *p == pos)
                 .is_none()
-        })
+        })// 1) niet in path.path 
         .filter(|pos| {
             locations
                 .iter()
                 .map(|location| location.to)
                 .find(|p| p == pos)
                 .is_none()
-        })
-        .filter(|pos| boardstate.chess[pos].is_none())
-        .min_by(|a, b| a.distance(start_pos).cmp(&b.distance(start_pos)))
+        }) // 2) niet in locations.to
+        .filter(|pos| boardstate.chess[pos].is_none())// 3) waar geen stuk staat
+        .min_by(|a, b| a.distance(start_pos).cmp(&b.distance(start_pos)))// 4) laagste value voor .distance()
         .unwrap();
     // hier vergelijk ik de distance van a tot de start_pos en de distance van b tot de start pos.
     // cmp returnt ordering::greater als de a.distance(start_pos) groter is dan b.distance(start_pos).
     // Hij vergelijkt dit voor alle mogelijke posities.
-
-    // TODO; Vind een positie die:
-    // 1) niet in path.path zit
-    // 2) niet in locations zit
-    // 3) boardstate.chess[path_node.pos].is_none()
-    // 4) laagste value voor .distance() van de beschikbare locaties
     Locations {
         from: start_pos,
         to: end_pos,
