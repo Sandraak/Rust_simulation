@@ -17,7 +17,7 @@ impl Node {
     }
 }
 ///All the positions and crossed pieces in separate vectors
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Path {
     path: Vec<Pos>,
     crossed_pieces: Vec<Pos>,
@@ -51,9 +51,11 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
 
         for piece in original_path.crossed_pieces.clone() {
             // Vind een goede eind locatie voor het uitwijkende stuk.
-            let locations = find_end_pos(piece, &original_path, boardstate, &obstructing_pieces);
+            let locations = find_end_pos(piece, &paths, boardstate, &obstructing_pieces);
             // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector.
             obstructing_pieces.push(locations);
+            println!("pop tha crossed pieces on the og path: {:?}", original_path.crossed_pieces);
+            original_path.crossed_pieces.pop();
         }
         // Er zijn nu nieuwe posities gevonden voor alle stukken die het originele pad blokkeerden.
         // Voor deze stukken moet ook het optimale pad gevonden worden. Deze gevonden paden worden ook toegevoegd aan de vector.
@@ -65,26 +67,24 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
         // Het kan zijn dat een stuk moet uitwijken over een pad waar ook een stuk op staat.
         // Dit stuk moet dan ook uitwijken.
         // Controleer of er niet nog meer obstructing pieces bijkomen.
-        // Voer hetzelfde riedeltje uit als hierboven.
-        // Nu veel herhalende code, nog ff een loopje van maken, nu nog ene bug waarbij dit maar 1x gebeurd.
-
-        let mut more_obstructing_pieces = false;
         for mut path in paths.clone() {
+            println!("current path in FOR loop: {:?}", path);
             if !path.crossed_pieces.is_empty() && path.path != original_path.path {
-                more_obstructing_pieces = true;
-                while more_obstructing_pieces {
+                // Als er crossed pieces zijn buiten het originele pad, moeten deze ook uitwijken.
+                while !path.crossed_pieces.is_empty() {
+                    println!("current path in WHILE loop: {:?}", path);
                     for piece in path.crossed_pieces.clone() {
-                        let locations = find_end_pos(piece, &path, boardstate, &obstructing_pieces);
+                        let locations =
+                            find_end_pos(piece, &paths, boardstate, &obstructing_pieces);
                         // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector.
                         obstructing_pieces.push(locations);
                         path.crossed_pieces.pop();
+                        println!("popped tha crossed pieces on other path: {:?}", path);
                     }
                     for piece in obstructing_pieces.clone() {
                         let new_path = a_star(piece.from, piece.to, boardstate)?;
-                        paths.push(new_path);
-                    }
-                    if path.crossed_pieces.is_empty() {
-                        more_obstructing_pieces = false;
+                        if !paths.contains(&new_path){
+                        paths.push(new_path);}
                     }
                 }
             }
@@ -93,15 +93,15 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
         // Als er voor elk van deze paden geen nieuwe obstructing pieces zijn
         // moeten de paden in paths omgedraaid worden uitgevoerd,
         // wanneer de originele zet is uitgevoerd moeten de stukken worden terug gezet.
-        if more_obstructing_pieces == false {
-            paths.reverse();
-            let mut reversed = obstructing_pieces.clone();
-            reversed.reverse();
-            // println!("paths reversed: {:?} \n", paths);
-            for piece in reversed {
-                let path_back = a_star(piece.to, piece.from, boardstate)?;
-                paths.push(path_back);
-            }
+
+        println!("PATHS: {:?}", paths);
+        paths.reverse();
+        let reversed = obstructing_pieces.clone();
+        // reversed.reverse();
+        // println!("paths reversed: {:?} \n", paths);
+        for piece in reversed {
+            let path_back = a_star(piece.to, piece.from, boardstate)?;
+            paths.push(path_back);
         }
     }
     Some(paths)
@@ -239,16 +239,22 @@ fn within_bounds(row: isize, col: isize) -> bool {
 ///            Nevermind, ik neem de nieuwe end pos's al mee bij de onbegaanbare stukken.
 fn find_end_pos(
     start_pos: Pos,
-    path: &Path,
+    paths: &Vec<Path>,
     boardstate: &BoardState,
     locations: &Vec<Locations>,
 ) -> Locations {
     let end_pos = Chess::board_positions()
-        .filter(|pos| !path.path.contains(pos))
+        .filter(|pos| {
+            paths
+                .iter()
+                .flat_map(|path| path.path.iter())
+                .find(|p| *p == pos)
+                .is_none()
+        })
         .filter(|pos| {
             locations
                 .iter()
-                .flat_map(|location| vec![location.from, location.to])
+                .map(|location| location.to)
                 .find(|p| p == pos)
                 .is_none()
         })
