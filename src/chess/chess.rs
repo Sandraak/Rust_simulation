@@ -337,23 +337,23 @@ where
     }
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub enum Outcome {
-    Winner(Color),
-    Stalemate,
-}
+// #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+// pub enum Outcome {
+//     Winner(Color),
+//     Stalemate,
+// }
 
-impl Outcome {
-    pub fn value(&self) -> i16 {
-        match self {
-            Outcome::Winner(color) => match color {
-                Color::Black => i16::MIN,
-                Color::White => i16::MAX,
-            },
-            Outcome::Stalemate => 0,
-        }
-    }
-}
+// impl Outcome {
+//     pub fn value(&self) -> i16 {
+//         match self {
+//             Outcome::Winner(color) => match color {
+//                 Color::Black => i16::MIN,
+//                 Color::White => i16::MAX,
+//             },
+//             Outcome::Stalemate => 0,
+//         }
+//     }
+// }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Piece {
@@ -394,26 +394,26 @@ pub enum Color {
     White,
 }
 
-impl Color {
-    /// Checks whether a new game state evaluation is better than the previous best for the current
-    /// player.
-    pub fn improves(&self, score: i16, best_score: Option<i16>) -> bool {
-        match best_score {
-            None => true,
-            Some(best) => match self {
-                Color::Black => score < best,
-                Color::White => score > best,
-            },
-        }
-    }
+// impl Color {
+//     /// Checks whether a new game state evaluation is better than the previous best for the current
+//     /// player.
+//     pub fn improves(&self, score: i16, best_score: Option<i16>) -> bool {
+//         match best_score {
+//             None => true,
+//             Some(best) => match self {
+//                 Color::Black => score < best,
+//                 Color::White => score > best,
+//             },
+//         }
+//     }
 
-    fn king_index(&self) -> usize {
-        match self {
-            Color::Black => 1,
-            Color::White => 0,
-        }
-    }
-}
+//     fn king_index(&self) -> usize {
+//         match self {
+//             Color::Black => 1,
+//             Color::White => 0,
+//         }
+//     }
+// }
 
 impl Not for Color {
     type Output = Self;

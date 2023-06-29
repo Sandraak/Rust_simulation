@@ -5,7 +5,7 @@ use crate::chess::{
 };
 
 pub const START_POS: Pos = Pos { x: 3, y: 2 };
-pub const END_POS: Pos = Pos { x: 3, y: 6 };
+pub const END_POS: Pos = Pos { x: 3, y: 7 };
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
 pub struct Node {
@@ -28,14 +28,14 @@ pub struct Path {
     capture: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 struct Locations {
     from: Pos,
     to: Pos,
 }
-struct PassedPiece {
-    piece: Vec<Locations>,
-}
+// struct PassedPiece {
+//     piece: Vec<Locations>,
+// }
 
 pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> Option<Vec<Path>> {
     // Lege vector met alle paden
@@ -44,15 +44,16 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
     let mut priorty_paths: Vec<Path> = vec![];
 
     // De originele zet
-    let mut original_path = a_star(start_pos, end_pos, boardstate)?;
-    // Is er een stuk geslagen?
-    if original_path.capture{
-        let capture_path = capture(end_pos, &paths, boardstate)?;
-        paths.push(capture_path);
-    }
+    let original_path = a_star(start_pos, end_pos, boardstate)?;
+    let mut capture_path : Path = original_path.clone(); // needs to be an empty path
     // Als de originele zet en de capture geen stukken passeert, is er maar 1 pad dat de magneet moet afleggen.
     paths.push(original_path.clone());
-
+    // Is er een stuk geslagen?
+    if original_path.capture{
+        capture_path = capture(end_pos, boardstate)?;
+        paths.push(capture_path.clone());
+    }
+    
     let mut no_crossed_pieces = true;
     for path in paths.clone() {
         if !path.crossed_pieces.is_empty(){
@@ -68,27 +69,34 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
     else {
         priorty_paths = paths.clone();
         let mut obstructing_pieces: Vec<Locations> = vec![];
-        for piece in original_path.crossed_pieces.clone() {
+
+        for mut path in priorty_paths{
+
+        for piece in path.crossed_pieces.clone() {
             // Vind een goede eind locatie voor het uitwijkende stuk.
             let locations = find_end_pos(piece, &paths, boardstate, &obstructing_pieces);
             // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector obstructing_pieces.
-            obstructing_pieces.push(locations);
-            original_path.crossed_pieces.pop();
+            if !obstructing_pieces.contains(&locations){
+                obstructing_pieces.push(locations);
+                }
+            path.crossed_pieces.pop();
         }
         // Er zijn nu nieuwe posities gevonden voor alle stukken die het originele pad blokkeerden.
         // Voor deze stukken moet ook het optimale pad gevonden worden. Deze gevonden paden worden ook toegevoegd aan de vector.
         for piece in obstructing_pieces.clone() {
             let path = a_star(piece.from, piece.to, boardstate)?;
-            paths.push(path);
+            if !paths.contains(&path) {
+                paths.push(path);
+            }
         }
 
-
+    }
 
         // Het kan zijn dat een stuk moet uitwijken over een pad waar ook een stuk op staat.
         // Dit stuk moet dan ook uitwijken.
         // Controleer of er niet nog meer obstructing pieces bijkomen.
         for mut path in paths.clone() {
-            if !path.crossed_pieces.is_empty() && path.path != original_path.path {
+            if !path.crossed_pieces.is_empty() && path.path != original_path.path && path.path != capture_path.path {
                 // Als er crossed pieces zijn buiten het originele pad, moeten deze ook uitwijken.
                 while !path.crossed_pieces.is_empty() {
                     for piece in path.crossed_pieces.clone() {
@@ -96,7 +104,9 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
                             find_end_pos(piece, &paths, boardstate, &obstructing_pieces);
                         // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector.
                         // Verwijder het stuk uit de crossed pieces vector, zodat de loop ooit stopt.
+                        if !obstructing_pieces.contains(&locations){
                         obstructing_pieces.push(locations);
+                        }
                         path.crossed_pieces.pop();
                     }
                     for piece in obstructing_pieces.clone() {
@@ -240,7 +250,7 @@ fn within_bounds(row: isize, col: isize) -> bool {
     (row >= -3 && row <= 10) && (col >= -1 && col <= 8)
 }
 
-fn capture(start_pos: Pos, paths: &Vec<Path>, boardstate: &BoardState) -> Option<Path> {
+fn capture(start_pos: Pos, boardstate: &BoardState) -> Option<Path> {
     let end_pos = boardstate
         .chess
         .graveyard_positions()
