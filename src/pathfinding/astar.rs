@@ -203,12 +203,12 @@ fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> Option<Path>
                     let mut cost = 4;
                     //Check diagonal
                     if row != 0 && col != 0 {
-                        cost += 3;
+                        cost += 1;
                     }
                     // Check whether there is a piece
                     // and update the cost for passing through
                     if boardstate.chess[pos].is_some() {
-                        cost += 8;
+                        cost += 12;
                     }
                     let distance_to_start: u8 = current.distance_to_start + cost; // schuin is even snel als rechtdoor
                     let distance = pos.distance(end_pos);
@@ -255,7 +255,7 @@ fn capture(start_pos: Pos, boardstate: &BoardState) -> Option<Path> {
         .chess
         .graveyard_positions()
         .filter(|pos| boardstate.chess[pos].is_none())
-        .min_by(|a, b| a.distance(start_pos).cmp(&b.distance(start_pos)))
+        .min_by(|a, b| a.distance(start_pos).partial_cmp(&b.distance(start_pos)).unwrap())
         .unwrap();
     a_star(start_pos, end_pos, boardstate)
 }
@@ -303,7 +303,7 @@ fn find_end_pos(
                 .is_none()
         }) // 2) niet in locations.to
         .filter(|pos| boardstate.chess[pos].is_none()) // 3) waar geen stuk staat
-        .min_by(|a, b| a.distance(start_pos).cmp(&b.distance(start_pos))) // 4) laagste value voor .distance()
+        .min_by(|a, b| a.distance(start_pos).partial_cmp(&b.distance(start_pos)).unwrap()) // 4) laagste value voor .distance()
         .unwrap();
     // hier vergelijk ik de distance van a tot de start_pos en de distance van b tot de start pos.
     // cmp returnt ordering::greater als de a.distance(start_pos) groter is dan b.distance(start_pos).
