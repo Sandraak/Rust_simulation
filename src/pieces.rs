@@ -356,13 +356,15 @@ fn move_pieces(
     mut ext_forces: Query<(&mut ExternalForce, &mut Transform, With<PieceComponent>)>,
     magnet_query: Query<(&mut Transform, &Magnet, Without<PieceComponent>)>,
 ) {
-    let (magnet_transform, _, _) = magnet_query.get_single().unwrap();
-    for (mut piece_force, piece_transform, _) in ext_forces.iter_mut() {
-        let delta = magnet_transform.translation - piece_transform.translation;
-        let direction = delta.normalize();
-        let distance = delta.length();
-        let force = direction * (MAGNET_STRENGTH / (4.0 * PI * distance.powf(2.0)));
-
-        piece_force.force = force;
+    let (magnet_transform, magnet, _) = magnet_query.get_single().unwrap();
+    // println!("magnet{:?}", magnet);
+    if magnet.on {
+        for (mut piece_force, piece_transform, _) in ext_forces.iter_mut() {
+            let delta = magnet_transform.translation - piece_transform.translation;
+            let direction = delta.normalize();
+            let distance = delta.length();
+            let force = direction * (MAGNET_STRENGTH / (4.0 * PI * distance.powf(2.0)));
+            piece_force.force = force;
+        }
     }
 }

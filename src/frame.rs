@@ -73,7 +73,7 @@ impl FromWorld for FrameColors {
 #[derive(Component, Copy, Clone, Debug)]
 pub struct Magnet {
     target_pos: Vec2,
-    on: bool,
+    pub on: bool,
     positions_reached: usize,
 }
 
@@ -182,15 +182,15 @@ fn move_magnet(
 ) {
     let (mut bar_transform, _, _, _) = bar_query.get_single_mut().unwrap();
     let (mut carrier_transform, _, _, _) = carrier_query.get_single_mut().unwrap();
-    let (mut magnet_transform, mut magnet, _, _) = magnet_query.get_single_mut().unwrap();
+    let (mut magnet_transform, magnet, _, _) = magnet_query.get_single_mut().unwrap();
 
     bar_transform.translation.x = magnet_transform.translation.x + 1.25;
     carrier_transform.translation.x = magnet_transform.translation.x + 1.25;
     carrier_transform.translation.z = magnet_transform.translation.z + 1.25;
 
     // test data
+    // Will need to receive path from pathfinding.
     let positions: Vec<Pos> = vec![
-        Pos { x: 0, y: 0 },
         Pos { x: 1, y: 1 },
         Pos { x: 2, y: 2 },
         Pos { x: 2, y: 3 },
@@ -212,7 +212,7 @@ fn move_magnet(
         );
         // thread::sleep(time::Duration::from_millis(1000));
         if let Ok((_, mut magnet, _, _)) = magnet_query.get_single_mut() {
-            if magnet.positions_reached <= positions.len() - 1 {
+            if magnet.positions_reached < positions.len() {
                 magnet.target_pos.x = positions[magnet.positions_reached].x as f32;
                 magnet.target_pos.y = positions[magnet.positions_reached].y as f32;
                 info!(
@@ -226,9 +226,12 @@ fn move_magnet(
                 magnet.positions_reached = 0;
                 magnet.on = false;
                 info!(
-                    "END goal: {:?}, {:?} reached, magnet status: {:?}",
+                    "END goal: {:?}, {:?} reached, magnet status: {:?},",
                     magnet.target_pos.x, magnet.target_pos.y, magnet.on
                 );
+                //Need to wait for new vector with positions. For now loop, so start again at 0 without turning on the magnet.
+                magnet.target_pos.x = positions[magnet.positions_reached].x as f32;
+                magnet.target_pos.y = positions[magnet.positions_reached].y as f32;
                 // Now the function will loop again because magnet.positions_reached = 0;
             }
         }
