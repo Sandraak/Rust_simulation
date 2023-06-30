@@ -18,7 +18,7 @@ const MAGNET_HEIGHT: f32 = 0.5;
 const MAGNET_RADIUS: f32 = 0.25;
 const MAGNET_Y: f32 = -BOARD_HEIGHT - 0.5 * MAGNET_HEIGHT;
 const MAGNET_OFFSET: Vec3 = Vec3::new(-1.25, MAGNET_Y, -1.25);
-pub const MAGNET_STRENGTH: f32 = 50.0;
+pub const MAGNET_STRENGTH: f32 = 25.0;
 pub struct FramePlugin;
 
 impl Plugin for FramePlugin {

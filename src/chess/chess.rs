@@ -119,7 +119,6 @@ impl Chess {
     pub fn graveyard_positions(&self) -> impl Iterator<Item = Pos> {
         let mut start = 9;
         let mut end = 10;
-
         if self.turn == Color::White {
             start = -3;
             end = -2;

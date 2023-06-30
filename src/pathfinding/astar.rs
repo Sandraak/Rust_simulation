@@ -41,7 +41,6 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
     // Lege vector met alle paden
     let mut paths: Vec<Path> = vec![];
     // Lege vector met de origele zet en eventueel geslagen stuk
-    let mut priorty_paths: Vec<Path> = vec![];
 
     // De originele zet
     let original_path = a_star(start_pos, end_pos, boardstate)?;
@@ -65,12 +64,12 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
         return Some(paths);
     }
 
-    // Pak de stukken die het originele pad blokkeren.
+    // Pak de stukken die het pad van de originele zet en het eventueel geslagen stuk blokkeren.
     else {
-        priorty_paths = paths.clone();
+        let priority_paths = paths.clone();
         let mut obstructing_pieces: Vec<Locations> = vec![];
 
-        for mut path in priorty_paths{
+        for mut path in priority_paths{
 
         for piece in path.crossed_pieces.clone() {
             // Vind een goede eind locatie voor het uitwijkende stuk.
@@ -89,9 +88,7 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
                 paths.push(path);
             }
         }
-
     }
-
         // Het kan zijn dat een stuk moet uitwijken over een pad waar ook een stuk op staat.
         // Dit stuk moet dan ook uitwijken.
         // Controleer of er niet nog meer obstructing pieces bijkomen.
@@ -246,10 +243,12 @@ fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> Option<Path>
     }
 }
 
+/// Checks whether a given position is on the board.
 fn within_bounds(row: isize, col: isize) -> bool {
     (row >= -3 && row <= 10) && (col >= -1 && col <= 8)
 }
 
+///Finds a path to the graveyard for a captured piece.
 fn capture(start_pos: Pos, boardstate: &BoardState) -> Option<Path> {
     let end_pos = boardstate
         .chess
