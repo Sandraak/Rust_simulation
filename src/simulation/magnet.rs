@@ -27,6 +27,11 @@ pub struct Magnet {
     positions_reached: usize,
 }
 
+#[derive(Resource)]
+struct NextPosition {
+    destination: Pos,
+}
+
 ///System that constantly checks the distance between the desired and true position of magnet.
 /// It moves the magnet towards the desired position as long as this distance is larger than 0.01.
 fn move_magnet(
