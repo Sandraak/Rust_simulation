@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_mod_picking::{Hover, PickableBundle, Selection};
 use bevy_rapier3d::prelude::{Collider, RigidBody};
 
-use crate::pieces::PieceComponent;
+// use crate::pieces::PieceComponent;
 
 pub const SMALL_FLOAT: f32 = 0.01;
 
@@ -74,12 +74,12 @@ pub struct Square {
 
 #[derive(Default, Resource)]
 struct SelectedSquare {
-    selected: Option<Square>,
+    _selected: Option<Square>,
 }
 
 #[derive(Default, Resource, Debug)]
 struct SelectedPiece {
-    selected: Option<Entity>,
+    _selected: Option<Entity>,
 }
 
 fn is_white(x: u8, y: u8) -> bool {
@@ -174,59 +174,59 @@ fn create_border(
         });
 }
 
-///Allows the user to move a piece to an empty square by clicking on the piece and desired location.
-fn perform_move(
-    mouse_button_inputs: Res<Input<MouseButton>>,
-    mut selected_square: ResMut<SelectedSquare>,
-    mut selected_piece: ResMut<SelectedPiece>,
-    mut square_query: Query<(&Square, &Interaction)>,
-    mut pieces_query: Query<(&mut PieceComponent, Entity)>,
-    // mut magnet_query: Query<&mut Magnet>,
-) {
-    if !mouse_button_inputs.just_pressed(MouseButton::Left) {
-        return;
-    }
+// /Allows the user to move a piece to an empty square by clicking on the piece and desired location.
+// fn perform_move(
+//     mouse_button_inputs: Res<Input<MouseButton>>,
+//     mut selected_square: ResMut<SelectedSquare>,
+//     mut selected_piece: ResMut<SelectedPiece>,
+//     mut square_query: Query<(&Square, &Interaction)>,
+//     mut pieces_query: Query<(&mut PieceComponent, Entity)>,
+//     // mut magnet_query: Query<&mut Magnet>,
+// ) {
+//     if !mouse_button_inputs.just_pressed(MouseButton::Left) {
+//         return;
+//     }
 
-    //selects the piece that was clicked on
-    for (square, interaction) in square_query.iter_mut() {
-        if let Interaction::Clicked = interaction {
-            let optional_piece = pieces_query.into_iter().find(|piece| {
-                piece.0.target_x as u8 == square.x && piece.0.target_y as u8 == square.y
-            });
-            if optional_piece.is_some() {
-                // Add the identifier of the piece entity to selected_piece. This identifier is later used to query the location of the selected piece.
-                selected_piece.selected = Some(optional_piece.unwrap().1);
-                info!("selected piece: {:?}", optional_piece);
-                //return so that the selected square won't be the same as the square the selected piece is on.
-                return;
-            }
-        }
-    }
-    // When a piece is selected, selects a square to where the selected piece will move.
-    if selected_piece.selected.is_some() {
-        for (square, interaction) in square_query.iter_mut() {
-            if let Interaction::Clicked = interaction {
-                selected_square.selected = Some(*square);
-                info!("selected square: {:?}", selected_square.selected);
-            }
-        }
-    }
-    // Move the selected piece to the selected square.
-    if selected_piece.selected.is_some() && selected_square.selected.is_some() {
-        // Get the PieceComponent of the piece with the identifier that was specified earlier.
-        let (mut selected_piece_com, _) = pieces_query
-            .get_mut(selected_piece.selected.unwrap())
-            .unwrap();
+//     //selects the piece that was clicked on
+//     for (square, interaction) in square_query.iter_mut() {
+//         if let Interaction::Clicked = interaction {
+//             let optional_piece = pieces_query.into_iter().find(|piece| {
+//                 piece.0.target_x as u8 == square.x && piece.0.target_y as u8 == square.y
+//             });
+//             if optional_piece.is_some() {
+//                 // Add the identifier of the piece entity to selected_piece. This identifier is later used to query the location of the selected piece.
+//                 selected_piece.selected = Some(optional_piece.unwrap().1);
+//                 info!("selected piece: {:?}", optional_piece);
+//                 //return so that the selected square won't be the same as the square the selected piece is on.
+//                 return;
+//             }
+//         }
+//     }
+//     // When a piece is selected, selects a square to where the selected piece will move.
+//     if selected_piece.selected.is_some() {
+//         for (square, interaction) in square_query.iter_mut() {
+//             if let Interaction::Clicked = interaction {
+//                 selected_square.selected = Some(*square);
+//                 info!("selected square: {:?}", selected_square.selected);
+//             }
+//         }
+//     }
+//     // Move the selected piece to the selected square.
+//     if selected_piece.selected.is_some() && selected_square.selected.is_some() {
+//         // Get the PieceComponent of the piece with the identifier that was specified earlier.
+//         let (mut selected_piece_com, _) = pieces_query
+//             .get_mut(selected_piece.selected.unwrap())
+//             .unwrap();
 
-        selected_piece_com.target_x = selected_square.selected.unwrap().x as usize;
-        selected_piece_com.target_y = selected_square.selected.unwrap().y as usize;
+//         selected_piece_com.target_x = selected_square.selected.unwrap().x as usize;
+//         selected_piece_com.target_y = selected_square.selected.unwrap().y as usize;
 
-        // if let Ok(mut magnet) = magnet_query.get_single_mut() {
-        //     magnet.target_pos.x = selected_square.selected.unwrap().x as f32;
-        //     magnet.target_pos.y = selected_square.selected.unwrap().y as f32;
-        // }
+//         // if let Ok(mut magnet) = magnet_query.get_single_mut() {
+//         //     magnet.target_pos.x = selected_square.selected.unwrap().x as f32;
+//         //     magnet.target_pos.y = selected_square.selected.unwrap().y as f32;
+//         // }
 
-        selected_piece.selected = None;
-        selected_square.selected = None;
-    }
-}
+//         selected_piece.selected = None;
+//         selected_square.selected = None;
+//     }
+// }

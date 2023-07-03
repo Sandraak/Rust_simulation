@@ -6,11 +6,11 @@ use bevy_rapier3d::{
 };
 
 use crate::{
-    board::*,
-    camera::{self, CameraPlugin},
+    simulation::board::*,
+    simulation::camera::{self, CameraPlugin},
     chess::*,
-    frame::*,
-    pieces::*,
+    simulation::frame::*,
+    simulation::pieces::*,
 };
 
 pub fn create_app(screen_width: f32, screen_height: f32) -> App {

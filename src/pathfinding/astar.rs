@@ -1,5 +1,5 @@
 use crate::chess::{
-    chess::{Chess},
+    chess::{Chess, Move},
     pos::Pos,
     BoardState,
 };
@@ -28,11 +28,13 @@ pub struct Path {
     capture: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-struct Locations {
-    from: Pos,
-    to: Pos,
-}
+// #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+// struct Locations {
+//     from: Pos,
+//     to: Pos,
+// }
+
+
 // struct PassedPiece {
 //     piece: Vec<Locations>,
 // }
@@ -67,7 +69,7 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
     // Pak de stukken die het pad van de originele zet en het eventueel geslagen stuk blokkeren.
     else {
         let priority_paths = paths.clone();
-        let mut obstructing_pieces: Vec<Locations> = vec![];
+        let mut obstructing_pieces: Vec<Move> = vec![];
 
         for mut path in priority_paths{
 
@@ -279,8 +281,8 @@ fn find_end_pos(
     start_pos: Pos,
     paths: &Vec<Path>,
     boardstate: &BoardState,
-    locations: &Vec<Locations>,
-) -> Locations {
+    locations: &Vec<Move>,
+) -> Move {
     // Vind een positie die:
     // 1) niet in path.path zit
     // 2) niet in locations.to zit
@@ -307,7 +309,7 @@ fn find_end_pos(
     // hier vergelijk ik de distance van a tot de start_pos en de distance van b tot de start pos.
     // cmp returnt ordering::greater als de a.distance(start_pos) groter is dan b.distance(start_pos).
     // Hij vergelijkt dit voor alle mogelijke posities.
-    Locations {
+    Move {
         from: start_pos,
         to: end_pos,
     }

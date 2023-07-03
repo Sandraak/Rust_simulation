@@ -7,7 +7,7 @@ use bevy_rapier3d::prelude::{
 };
 
 use crate::chess::{chess::Piece, BoardState};
-use crate::frame::*;
+use crate::simulation::frame::*;
 
 const SPAWN_HEIGHT: f32 = 0.0;
 const PIECES_HEIGHT: f32 = 1.75;

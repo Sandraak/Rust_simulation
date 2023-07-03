@@ -1,17 +1,14 @@
-// use pathfinding::{astar::{Node, self, a_star, START_NODE, END_NODE}};
-use pathfinding::astar::*;
-mod app;
-mod board;
-mod camera;
+mod simulation;
 mod chess;
-mod frame;
 mod pathfinding;
-mod pieces;
+use pathfinding::astar::*;
+use crate::simulation::app;
+
 
 fn main() {
-    // let boardstate = chess::BoardState::default();
-    // let path = calculate_path(START_POS, END_POS, &boardstate);
-    // print!("{:?}", path);
+    let boardstate = chess::BoardState::default();
+    let path = calculate_path(START_POS, END_POS, &boardstate);
+    print!("{:?}", path);
     let mut app = app::create_app(1600.0, 1600.0);
     app.run();
 }

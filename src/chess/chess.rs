@@ -126,10 +126,10 @@ impl Chess {
         (start..=end).flat_map(|x| (-1..=8).map(move |y| Pos::new(x, y)))
     }
 
-    /// Returns an iterator over all pieces on the board.
-    fn pieces(&self) -> impl Iterator<Item = (Pos, Piece)> + '_ {
-        Self::board_positions().filter_map(|pos| self[pos].map(|piece| (pos, piece)))
-    }
+    // /// Returns an iterator over all pieces on the board.
+    // fn pieces(&self) -> impl Iterator<Item = (Pos, Piece)> + '_ {
+    //     Self::board_positions().filter_map(|pos| self[pos].map(|piece| (pos, piece)))
+    // }
 }
 
 impl Default for Chess {
@@ -219,12 +219,12 @@ pub enum Kind {
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Move {
-    from: Pos,
-    to: Pos,
+    pub from: Pos,
+    pub to: Pos,
 }
 
-impl Move {
-    fn new(from: Pos, to: Pos) -> Self {
-        Move { from, to }
-    }
-}
+// impl Move {
+//     fn new(from: Pos, to: Pos) -> Self {
+//         Move { from, to }
+//     }
+// }

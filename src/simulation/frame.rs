@@ -1,11 +1,8 @@
-use core::time;
-use std::thread;
-
-// use bevy::prelude::*;
 use bevy::prelude::{shape::Box, *};
 use bevy_rapier3d::prelude::RigidBody;
 
-use crate::{board::*, chess::pos::Pos};
+use crate::simulation::board::*;
+use crate::chess::pos::Pos;
 
 const BAR_Y: f32 = 0.0;
 const BAR_Z: f32 = 0.0;
