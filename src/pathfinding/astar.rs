@@ -4,8 +4,10 @@ use crate::chess::{
     BoardState,
 };
 
-pub const START_POS: Pos = Pos { x: 3, y: 2 };
-pub const END_POS: Pos = Pos { x: 3, y: 7 };
+pub const TEST_MOVE: Move = Move {
+    from: Pos { x: 3, y: 2 },
+    to: Pos { x: 3, y: 7 },
+};
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
 pub struct Node {
@@ -33,19 +35,19 @@ pub struct Path {
     positions: Vec<Pos>,
 }
 
-pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> Option<Vec<Path>> {
+pub fn calculate_path(mov: Move, boardstate: &BoardState) -> Option<Vec<Path>> {
     // Lege vector met alle paden
     let mut paths_info: Vec<PathInformation> = vec![];
     // Lege vector met de origele zet en eventueel geslagen stuk
 
     // De originele zet
-    let original_path_info = a_star(start_pos, end_pos, boardstate)?;
+    let original_path_info = a_star(mov.from, mov.to, boardstate)?;
     let mut capture_path_info: PathInformation = original_path_info.clone(); // needs to be an empty path
-                                                                   // Als de originele zet en de capture geen stukken passeert, is er maar 1 pad dat de magneet moet afleggen.
+                                                                             // Als de originele zet en de capture geen stukken passeert, is er maar 1 pad dat de magneet moet afleggen.
     paths_info.push(original_path_info.clone());
     // Is er een stuk geslagen?
     if original_path_info.capture {
-        capture_path_info = capture(end_pos, boardstate)?;
+        capture_path_info = capture(mov.to, boardstate)?;
         paths_info.push(capture_path_info.clone());
     }
 
@@ -57,7 +59,12 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
     }
 
     if no_crossed_pieces {
-        return Some(paths_info.into_iter().map(|path_info| path_info.path).collect());
+        return Some(
+            paths_info
+                .into_iter()
+                .map(|path_info| path_info.path)
+                .collect(),
+        );
     }
     // Pak de stukken die het pad van de originele zet en het eventueel geslagen stuk blokkeren.
     else {
@@ -122,7 +129,12 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
             paths_info.push(path_back);
         }
     }
-    Some(paths_info.into_iter().map(|path_info| path_info.path).collect())
+    Some(
+        paths_info
+            .into_iter()
+            .map(|path_info| path_info.path)
+            .collect(),
+    )
 }
 
 ///Finds the shortest path on the board between a start and end position, based on the current boardstate.
