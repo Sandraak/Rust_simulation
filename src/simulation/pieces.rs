@@ -350,8 +350,8 @@ fn create_pieces(
     }
 }
 
-///System that constantly checks the distance between a piece and the magnet.
-/// It then executes a force on the piece towards the magnet based on this distance.
+/// System that constantly checks the distance between a piece and the magnet.
+/// It then executes a force on the piece towards the magnet based on this distance when the magnet is on.
 fn move_pieces(
     mut ext_forces: Query<(&mut ExternalForce, &mut Transform, With<PieceComponent>)>,
     magnet_query: Query<(&mut Transform, &Magnet, Without<PieceComponent>)>,

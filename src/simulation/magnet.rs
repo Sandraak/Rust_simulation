@@ -27,6 +27,8 @@ pub struct Magnet {
     positions_reached: usize,
 }
 
+/// Systeem dat de nextPositon opvraagt
+
 #[derive(Resource)]
 struct NextPosition {
     destination: Pos,
