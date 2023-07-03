@@ -34,7 +34,6 @@ pub struct Path {
 //     to: Pos,
 // }
 
-
 // struct PassedPiece {
 //     piece: Vec<Locations>,
 // }
@@ -46,56 +45,57 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
 
     // De originele zet
     let original_path = a_star(start_pos, end_pos, boardstate)?;
-    let mut capture_path : Path = original_path.clone(); // needs to be an empty path
-    // Als de originele zet en de capture geen stukken passeert, is er maar 1 pad dat de magneet moet afleggen.
+    let mut capture_path: Path = original_path.clone(); // needs to be an empty path
+                                                        // Als de originele zet en de capture geen stukken passeert, is er maar 1 pad dat de magneet moet afleggen.
     paths.push(original_path.clone());
     // Is er een stuk geslagen?
-    if original_path.capture{
+    if original_path.capture {
         capture_path = capture(end_pos, boardstate)?;
         paths.push(capture_path.clone());
     }
-    
+
     let mut no_crossed_pieces = true;
     for path in paths.clone() {
-        if !path.crossed_pieces.is_empty(){
+        if !path.crossed_pieces.is_empty() {
             no_crossed_pieces = false;
         }
     }
 
-    if no_crossed_pieces{
+    if no_crossed_pieces {
         return Some(paths);
     }
-
     // Pak de stukken die het pad van de originele zet en het eventueel geslagen stuk blokkeren.
     else {
         let priority_paths = paths.clone();
         let mut obstructing_pieces: Vec<Move> = vec![];
 
-        for mut path in priority_paths{
-
-        for piece in path.crossed_pieces.clone() {
-            // Vind een goede eind locatie voor het uitwijkende stuk.
-            let locations = find_end_pos(piece, &paths, boardstate, &obstructing_pieces);
-            // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector obstructing_pieces.
-            if !obstructing_pieces.contains(&locations){
-                obstructing_pieces.push(locations);
+        for mut path in priority_paths {
+            for piece in path.crossed_pieces.clone() {
+                // Vind een goede eind locatie voor het uitwijkende stuk.
+                let locations = find_end_pos(piece, &paths, boardstate, &obstructing_pieces);
+                // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector obstructing_pieces.
+                if !obstructing_pieces.contains(&locations) {
+                    obstructing_pieces.push(locations);
                 }
-            path.crossed_pieces.pop();
-        }
-        // Er zijn nu nieuwe posities gevonden voor alle stukken die het originele pad blokkeerden.
-        // Voor deze stukken moet ook het optimale pad gevonden worden. Deze gevonden paden worden ook toegevoegd aan de vector.
-        for piece in obstructing_pieces.clone() {
-            let path = a_star(piece.from, piece.to, boardstate)?;
-            if !paths.contains(&path) {
-                paths.push(path);
+                path.crossed_pieces.pop();
+            }
+            // Er zijn nu nieuwe posities gevonden voor alle stukken die het originele pad blokkeerden.
+            // Voor deze stukken moet ook het optimale pad gevonden worden. Deze gevonden paden worden ook toegevoegd aan de vector.
+            for piece in obstructing_pieces.clone() {
+                let path = a_star(piece.from, piece.to, boardstate)?;
+                if !paths.contains(&path) {
+                    paths.push(path);
+                }
             }
         }
-    }
         // Het kan zijn dat een stuk moet uitwijken over een pad waar ook een stuk op staat.
         // Dit stuk moet dan ook uitwijken.
         // Controleer of er niet nog meer obstructing pieces bijkomen.
         for mut path in paths.clone() {
-            if !path.crossed_pieces.is_empty() && path.path != original_path.path && path.path != capture_path.path {
+            if !path.crossed_pieces.is_empty()
+                && path.path != original_path.path
+                && path.path != capture_path.path
+            {
                 // Als er crossed pieces zijn buiten het originele pad, moeten deze ook uitwijken.
                 while !path.crossed_pieces.is_empty() {
                     for piece in path.crossed_pieces.clone() {
@@ -103,8 +103,8 @@ pub fn calculate_path(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> 
                             find_end_pos(piece, &paths, boardstate, &obstructing_pieces);
                         // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector.
                         // Verwijder het stuk uit de crossed pieces vector, zodat de loop ooit stopt.
-                        if !obstructing_pieces.contains(&locations){
-                        obstructing_pieces.push(locations);
+                        if !obstructing_pieces.contains(&locations) {
+                            obstructing_pieces.push(locations);
                         }
                         path.crossed_pieces.pop();
                     }
@@ -167,14 +167,11 @@ fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> Option<Path>
             let mut path_node = current;
             loop {
                 //Check if there are any crossed pieces. The moving piece is not an obstructing piece.
-                if boardstate.chess[path_node.pos].is_some()
-                    && (path_node.pos != start_node.pos)
-                {
-                    if boardstate.chess[path_node.pos].is_some() && (path_node.pos == end_pos){
+                if boardstate.chess[path_node.pos].is_some() && (path_node.pos != start_node.pos) {
+                    if boardstate.chess[path_node.pos].is_some() && (path_node.pos == end_pos) {
                         path.capture = true;
-                    }
-                    else{
-                    path.crossed_pieces.push(path_node.pos);
+                    } else {
+                        path.crossed_pieces.push(path_node.pos);
                     }
                 }
                 path.path.push(path_node.pos);
@@ -256,7 +253,11 @@ fn capture(start_pos: Pos, boardstate: &BoardState) -> Option<Path> {
         .chess
         .graveyard_positions()
         .filter(|pos| boardstate.chess[pos].is_none())
-        .min_by(|a, b| a.distance(start_pos).partial_cmp(&b.distance(start_pos)).unwrap())
+        .min_by(|a, b| {
+            a.distance(start_pos)
+                .partial_cmp(&b.distance(start_pos))
+                .unwrap()
+        })
         .unwrap();
     a_star(start_pos, end_pos, boardstate)
 }
@@ -304,7 +305,11 @@ fn find_end_pos(
                 .is_none()
         }) // 2) niet in locations.to
         .filter(|pos| boardstate.chess[pos].is_none()) // 3) waar geen stuk staat
-        .min_by(|a, b| a.distance(start_pos).partial_cmp(&b.distance(start_pos)).unwrap()) // 4) laagste value voor .distance()
+        .min_by(|a, b| {
+            a.distance(start_pos)
+                .partial_cmp(&b.distance(start_pos))
+                .unwrap()
+        }) // 4) laagste value voor .distance()
         .unwrap();
     // hier vergelijk ik de distance van a tot de start_pos en de distance van b tot de start pos.
     // cmp returnt ordering::greater als de a.distance(start_pos) groter is dan b.distance(start_pos).

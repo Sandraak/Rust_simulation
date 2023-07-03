@@ -6,12 +6,14 @@ use bevy_rapier3d::{
 };
 
 use crate::{
+    chess::*,
     simulation::board::*,
     simulation::camera::{self, CameraPlugin},
-    chess::*,
     simulation::frame::*,
     simulation::pieces::*,
 };
+
+use super::magnet::MagnetPlugin;
 
 pub fn create_app(screen_width: f32, screen_height: f32) -> App {
     let resolution = WindowResolution::new(screen_width, screen_height);
@@ -38,6 +40,7 @@ pub fn create_app(screen_width: f32, screen_height: f32) -> App {
         })
         .add_plugin(BoardPlugin)
         .add_plugin(PiecesPlugin)
+        .add_plugin(MagnetPlugin)
         .add_plugin(FramePlugin)
         .add_plugin(CameraPlugin);
 

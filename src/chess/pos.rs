@@ -20,7 +20,7 @@ impl Pos {
         self.y
     }
     /// Gives the distance between two points, ignoring additional distance for diagonal movement.
-    pub fn distance(&self, other: Pos) -> f32{
+    pub fn distance(&self, other: Pos) -> f32 {
         let dx = (self.x - other.x).abs();
         let dy = (self.y - other.y).abs();
 

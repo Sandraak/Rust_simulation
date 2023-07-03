@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::ops::{Index, IndexMut, Not};
 
-use super::{pos::*};
+use super::pos::*;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Graveyard {
@@ -10,7 +10,7 @@ pub struct Graveyard {
 }
 
 impl Graveyard {
-   pub fn default() -> Self {
+    pub fn default() -> Self {
         let graveyard = [
             [None, None],
             [None, None],
