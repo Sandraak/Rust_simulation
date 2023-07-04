@@ -18,6 +18,10 @@ pub struct CurrentGoal {
 pub struct CurrentMove {
     mov: Move,
 }
+
+// TODO draaien systems in een aparte thread?
+// welke thread is waar bezig?
+
 /// 1) Maak een systeem dat een nieuwe pad berekent wanneer de current move verandert.
 ///        a)Stuur deze Move naar het pathfinding component
 ///        b) Zorgt er voor dat pathfinding een pad gaat berekenen wanneer hij een nieuwe move krijgt.
@@ -31,7 +35,7 @@ fn update_current_pos(locations: Locations) {}
 /// activate when all the locatiosn have been reached.
 /// reset all the resources linked to the current turn.
 /// update the boardstate
-fn end_turn(){}
+fn end_turn() {}
 
 // / TODO:
 // / 1) Maak een systeem dat een nieuwe pad berekent wanneer de current move verandert.

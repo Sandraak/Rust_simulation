@@ -35,13 +35,15 @@ pub struct Path {
     positions: Vec<Pos>,
 }
 
+//cascading?
+
 pub fn calculate_path(mov: Move, boardstate: &BoardState) -> Option<Vec<Path>> {
     // Lege vector met alle paden
     let mut paths_info: Vec<PathInformation> = vec![];
     // Lege vector met de origele zet en eventueel geslagen stuk
-
     // De originele zet
     let original_path_info = a_star(mov.from, mov.to, boardstate)?;
+    //niet nodig?
     let mut capture_path_info: PathInformation = original_path_info.clone(); // needs to be an empty path
                                                                              // Als de originele zet en de capture geen stukken passeert, is er maar 1 pad dat de magneet moet afleggen.
     paths_info.push(original_path_info.clone());
@@ -50,14 +52,12 @@ pub fn calculate_path(mov: Move, boardstate: &BoardState) -> Option<Vec<Path>> {
         capture_path_info = capture(mov.to, boardstate)?;
         paths_info.push(capture_path_info.clone());
     }
-
     let mut no_crossed_pieces = true;
     for path_info in paths_info.clone() {
         if !path_info.crossed_pieces.is_empty() {
             no_crossed_pieces = false;
         }
     }
-
     if no_crossed_pieces {
         return Some(
             paths_info
