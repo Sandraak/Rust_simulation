@@ -1,5 +1,5 @@
 use crate::{
-    chess::{chess::Move, pos::Pos, BoardState},
+    chess::{chess::Move, pos::Pos},
     pathfinding::astar::Path,
 };
 use bevy::prelude::*;
@@ -85,7 +85,7 @@ fn update_path(_new_move: EventReader<MoveEvent>, mut new_path: EventWriter<Path
 fn flatten_locations(
     current_paths: ResMut<CurrentPaths>,
     mut current_locations: ResMut<CurrentLocations>,
-    path_update: EventReader<NewPathEvent>,
+    _path_update: EventReader<NewPathEvent>,
     mut start_move: EventWriter<FirstMoveEvent>,
 ) {
     current_locations.locations = current_paths.paths.iter().cloned().flatten().collect();
@@ -96,8 +96,8 @@ fn flatten_locations(
 /// Update de current locatie naar devolgende in de lijst locaties.
 /// Zorg er voor dat de magneten gaan veranderen wanneer deze locatie verandert.
 fn update_current_pos(
-    first_move: EventReader<FirstMoveEvent>,
-    magnet_update: EventReader<MagnetEvent>,
+    _first_move: EventReader<FirstMoveEvent>,
+    _magnet_update: EventReader<MagnetEvent>,
     mut magnet_status: ResMut<MagnetStatus>,
     mut locations_flat: ResMut<CurrentLocations>,
     mut new_pos: ResMut<Destination>,
@@ -121,7 +121,7 @@ fn update_current_pos(
 /// reset all the resources linked to the current turn.
 /// update the boardstate
 fn end_turn(
-    end_turn: EventReader<EndTurnEvent>,
+    _end_turn: EventReader<EndTurnEvent>,
     mut current_locations: ResMut<CurrentPaths>,
     mut status: ResMut<MagnetStatus>,
 ) {
