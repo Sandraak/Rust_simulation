@@ -7,6 +7,7 @@ use bevy_rapier3d::prelude::{
 };
 
 use crate::chess::{chess::Piece, BoardState};
+use crate::controller::controller::MagnetStatus;
 use crate::simulation::magnet::*;
 
 const SPAWN_HEIGHT: f32 = 0.0;
@@ -354,11 +355,12 @@ fn create_pieces(
 /// It then executes a force on the piece towards the magnet based on this distance when the magnet is on.
 fn move_pieces(
     mut ext_forces: Query<(&mut ExternalForce, &mut Transform, With<PieceComponent>)>,
-    magnet_query: Query<(&mut Transform, &Magnet, Without<PieceComponent>)>,
+    magnet_query: Query<(&Transform, Without<PieceComponent>)>,
+    magnet_status : Res<MagnetStatus>
 ) {
-    let (magnet_transform, magnet, _) = magnet_query.get_single().unwrap();
+    let (magnet_transform, _) = magnet_query.get_single().unwrap();
     // println!("magnet{:?}", magnet);
-    if magnet.on {
+    if magnet_status.on {
         for (mut piece_force, piece_transform, _) in ext_forces.iter_mut() {
             let delta = magnet_transform.translation - piece_transform.translation;
             let direction = delta.normalize();

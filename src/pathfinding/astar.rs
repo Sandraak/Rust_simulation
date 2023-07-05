@@ -1,4 +1,4 @@
-use bevy::prelude::{App, EventReader, EventWriter, Plugin, ResMut, Res};
+use bevy::prelude::{App, EventReader, EventWriter, Plugin, Res, ResMut};
 
 use crate::{
     chess::{
@@ -37,7 +37,16 @@ struct PathInformation {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Path {
-    positions: Vec<Pos>,
+    pub positions: Vec<Pos>,
+}
+
+impl IntoIterator for Path {
+    type Item = Pos;
+    type IntoIter = <Vec<Pos> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.positions.into_iter()
+    }
 }
 
 pub struct PathfindingPlugin;
@@ -49,21 +58,24 @@ impl Plugin for PathfindingPlugin {
 }
 
 fn give_path(
-    _ev_new_move: EventReader<NewMoveEvent>,
+    _new_move: EventReader<PathEvent>,
     current_move: Res<CurrentMove>,
     boardstate: Res<BoardState>,
-    mut current_locations: ResMut<CurrentLocations>
+    mut current_locations: ResMut<CurrentPaths>,
+    mut new_locations: EventWriter<NewPathEvent>,
 ) {
-    *current_locations =  CurrentLocations{path: calculate_path(&current_move, &boardstate)};
-}    
-
+    *current_locations = CurrentPaths {
+        paths: calculate_path(&current_move, &boardstate).unwrap(),
+    };
+    new_locations.send(NewPathEvent);
+}
 
 //cascading?
 
 pub fn calculate_path(
     mov: &Res<CurrentMove>,
     boardstate: &Res<BoardState>,
-// ) -> ResMut<CurrentLocations> {
+    // ) -> ResMut<CurrentLocations> {
 ) -> Option<Vec<Path>> {
     // Lege vector met alle paden
     let mut paths_info: Vec<PathInformation> = vec![];
