@@ -34,12 +34,16 @@ struct NextPosition {
     destination: Pos,
 }
 
+/// event writer
+///
+fn signaler() {}
+
 ///System that constantly checks the distance between the desired and true position of magnet.
 /// It moves the magnet towards the desired position as long as this distance is larger than 0.01.
 fn move_magnet(
     time: Res<Time>,
     mut magnet_query: Query<(&mut Transform, &mut Magnet, Without<Bar>, Without<Carrier>)>,
-    // positions: Vec<Pos>,
+    // destionation: ResMut<CurrentGoal>,
 ) {
     let (mut magnet_transform, magnet, _, _) = magnet_query.get_single_mut().unwrap();
     // test data

@@ -1,7 +1,12 @@
-use crate::chess::{
-    chess::{Chess, Move},
-    pos::Pos,
-    BoardState,
+use bevy::prelude::{App, EventReader, EventWriter, Plugin, ResMut, Res};
+
+use crate::{
+    chess::{
+        chess::{Chess, Move},
+        pos::Pos,
+        BoardState,
+    },
+    controller::controller::*,
 };
 
 pub const TEST_MOVE: Move = Move {
@@ -35,21 +40,43 @@ pub struct Path {
     positions: Vec<Pos>,
 }
 
+pub struct PathfindingPlugin;
+
+impl Plugin for PathfindingPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system(give_path);
+    }
+}
+
+fn give_path(
+    _ev_new_move: EventReader<NewMoveEvent>,
+    current_move: Res<CurrentMove>,
+    boardstate: Res<BoardState>,
+    mut current_locations: ResMut<CurrentLocations>
+) {
+    *current_locations =  CurrentLocations{path: calculate_path(&current_move, &boardstate)};
+}    
+
+
 //cascading?
 
-pub fn calculate_path(mov: Move, boardstate: &BoardState) -> Option<Vec<Path>> {
+pub fn calculate_path(
+    mov: &Res<CurrentMove>,
+    boardstate: &Res<BoardState>,
+// ) -> ResMut<CurrentLocations> {
+) -> Option<Vec<Path>> {
     // Lege vector met alle paden
     let mut paths_info: Vec<PathInformation> = vec![];
     // Lege vector met de origele zet en eventueel geslagen stuk
     // De originele zet
-    let original_path_info = a_star(mov.from, mov.to, boardstate)?;
+    let original_path_info = a_star(mov.current_move.from, mov.current_move.to, boardstate)?;
     //niet nodig?
     let mut capture_path_info: PathInformation = original_path_info.clone(); // needs to be an empty path
                                                                              // Als de originele zet en de capture geen stukken passeert, is er maar 1 pad dat de magneet moet afleggen.
     paths_info.push(original_path_info.clone());
     // Is er een stuk geslagen?
     if original_path_info.capture {
-        capture_path_info = capture(mov.to, boardstate)?;
+        capture_path_info = capture(mov.current_move.to, boardstate)?;
         paths_info.push(capture_path_info.clone());
     }
     let mut no_crossed_pieces = true;
