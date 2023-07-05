@@ -4,19 +4,32 @@ use crate::{
 };
 use bevy::prelude::*;
 
-
 pub struct ControllerPlugin;
 
 impl Plugin for ControllerPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CurrentPaths>()
-        .init_resource::<CurrentLocations>()
-        .insert_resource(Destination{goal : Pos { x: 0, y: 0 }})
-        .insert_resource(CurrentMove{current_move : Move {from : Pos { x: 0, y: 0 }, to : Pos { x: 0, y: 0 }}})
-        .add_system(update_path)
-        .add_system(flatten_locations)
-        .add_system(update_current_pos)
-        .add_system(end_turn);
+            .init_resource::<CurrentLocations>()
+            .init_resource::<MagnetStatus>()
+            .insert_resource(Destination {
+                goal: Pos { x: 0, y: 0 },
+            })
+            .insert_resource(CurrentMove {
+                current_move: Move {
+                    from: Pos { x: 0, y: 0 },
+                    to: Pos { x: 0, y: 0 },
+                },
+            })
+            .add_event::<MoveEvent>()
+            .add_event::<NewPathEvent>()
+            .add_event::<PathEvent>()
+            .add_event::<FirstMoveEvent>()
+            .add_event::<MagnetEvent>()
+            .add_event::<EndTurnEvent>()
+            .add_system(update_path)
+            .add_system(flatten_locations)
+            .add_system(update_current_pos)
+            .add_system(end_turn);
     }
 }
 
@@ -43,7 +56,6 @@ pub struct CurrentMove {
 pub struct MagnetStatus {
     pub simulation: bool,
     pub real: bool,
-    pub first_move: bool,
     pub on: bool,
 }
 
@@ -52,7 +64,6 @@ impl Default for MagnetStatus {
         Self {
             simulation: false,
             real: false,
-            first_move: true,
             on: false,
         }
     }
@@ -62,6 +73,7 @@ pub struct NewPathEvent;
 pub struct PathEvent;
 pub struct FirstMoveEvent;
 pub struct MagnetEvent;
+pub struct EndTurnEvent;
 
 /// Wanneer de CurrentMove resource verandert, stuurt de chess computer een MoveEvent dat dit is gebeurd.
 /// update_path reageert op dit event door een PathEvent te sturen
@@ -89,14 +101,19 @@ fn update_current_pos(
     mut magnet_status: ResMut<MagnetStatus>,
     mut locations_flat: ResMut<CurrentLocations>,
     mut new_pos: ResMut<Destination>,
+    mut end_turn: EventWriter<EndTurnEvent>,
 ) {
-    if magnet_status.simulation && magnet_status.real {
-        *new_pos = Destination {
-            goal: *locations_flat.locations.first().unwrap(),
-        };
-        locations_flat.locations.remove(0);
-        magnet_status.simulation = false;
-        magnet_status.real = false;
+    if locations_flat.locations.is_empty() {
+        end_turn.send(EndTurnEvent);
+    } else {
+        if magnet_status.simulation && magnet_status.real {
+            *new_pos = Destination {
+                goal: *locations_flat.locations.first().unwrap(),
+            };
+            locations_flat.locations.remove(0);
+            magnet_status.simulation = false;
+            magnet_status.real = false;
+        }
     }
 }
 
@@ -104,13 +121,13 @@ fn update_current_pos(
 /// reset all the resources linked to the current turn.
 /// update the boardstate
 fn end_turn(
+    end_turn: EventReader<EndTurnEvent>,
     mut current_locations: ResMut<CurrentPaths>,
     mut status: ResMut<MagnetStatus>,
 ) {
     *current_locations = CurrentPaths { paths: vec![] };
     status.simulation = false;
     status.real = false;
-    status.first_move = true;
     status.on = false;
 }
 

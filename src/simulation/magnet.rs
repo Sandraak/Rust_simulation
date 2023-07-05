@@ -1,5 +1,4 @@
 use crate::{
-    chess::pos::Pos,
     controller::controller::{Destination, MagnetEvent, MagnetStatus},
     simulation::frame::*,
 };
@@ -11,7 +10,7 @@ use super::board::BOARD_HEIGHT;
 const MAGNET_HEIGHT: f32 = 0.5;
 const MAGNET_RADIUS: f32 = 0.25;
 const MAGNET_Y: f32 = -BOARD_HEIGHT - 0.5 * MAGNET_HEIGHT;
-const MAGNET_OFFSET: Vec3 = Vec3::new(-1.25, MAGNET_Y, -1.25);
+const MAGNET_OFFSET: Vec3 = Vec3::new(-2.25, MAGNET_Y, -2.25);
 
 pub const MAGNET_STRENGTH: f32 = 25.0;
 pub struct MagnetPlugin;
@@ -46,11 +45,10 @@ fn signaler(
 ) {
     let (magnet_transform, magnet, _, _) = magnet_query.get_single_mut().unwrap();
     let magnet_direction = Vec3::new(magnet.target_pos.x, MAGNET_Y, magnet.target_pos.y)
-    - magnet_transform.translation;
-    if  magnet_direction.length() <= 0.01{
+        - magnet_transform.translation;
+    if magnet_direction.length() <= 0.01 {
         magnet_status.on = true;
         magnet_status.simulation = true;
-        magnet_status.first_move = false;
         magnet_update.send(MagnetEvent);
     }
 }
@@ -139,6 +137,6 @@ fn create_magnet(
             target_pos: Vec2 {
                 x: MAGNET_OFFSET[0],
                 y: MAGNET_OFFSET[2],
-            }
+            },
         });
 }

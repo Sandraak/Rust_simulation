@@ -10,7 +10,7 @@ use crate::{
     simulation::board::*,
     simulation::camera::{self, CameraPlugin},
     simulation::frame::*,
-    simulation::pieces::*,
+    simulation::pieces::*, controller::controller::ControllerPlugin,
 };
 
 use super::magnet::MagnetPlugin;
@@ -38,6 +38,7 @@ pub fn create_app(screen_width: f32, screen_height: f32) -> App {
             always_on_top: true,
             ..Default::default()
         })
+        .add_plugin(ControllerPlugin)
         .add_plugin(BoardPlugin)
         .add_plugin(PiecesPlugin)
         .add_plugin(MagnetPlugin)

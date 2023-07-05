@@ -356,7 +356,7 @@ fn create_pieces(
 fn move_pieces(
     mut ext_forces: Query<(&mut ExternalForce, &mut Transform, With<PieceComponent>)>,
     magnet_query: Query<(&Transform, Without<PieceComponent>)>,
-    magnet_status : Res<MagnetStatus>
+    magnet_status: Res<MagnetStatus>,
 ) {
     let (magnet_transform, _) = magnet_query.get_single().unwrap();
     // println!("magnet{:?}", magnet);
