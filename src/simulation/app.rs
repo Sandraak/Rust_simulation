@@ -7,10 +7,11 @@ use bevy_rapier3d::{
 
 use crate::{
     chess::*,
+    controller::controller::ControllerPlugin,
     simulation::board::*,
     simulation::camera::{self, CameraPlugin},
     simulation::frame::*,
-    simulation::pieces::*, controller::controller::ControllerPlugin,
+    simulation::pieces::*,
 };
 
 use super::magnet::MagnetPlugin;
@@ -40,8 +41,8 @@ pub fn create_app(screen_width: f32, screen_height: f32) -> App {
         })
         .add_plugin(ControllerPlugin)
         .add_plugin(BoardPlugin)
-        .add_plugin(PiecesPlugin)
         .add_plugin(MagnetPlugin)
+        .add_plugin(PiecesPlugin)
         .add_plugin(FramePlugin)
         .add_plugin(CameraPlugin);
 

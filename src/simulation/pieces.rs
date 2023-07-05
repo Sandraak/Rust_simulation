@@ -30,6 +30,25 @@ impl Plugin for PiecesPlugin {
     }
 }
 
+/// System that constantly checks the distance between a piece and the magnet.
+/// It then executes a force on the piece towards the magnet based on this distance when the magnet is on.
+fn move_pieces(
+    mut ext_forces: Query<(&mut ExternalForce, &mut Transform, With<PieceComponent>)>,
+    magnet_query: Query<(&Transform, &Magnet, Without<PieceComponent>)>,
+    magnet_status: Res<MagnetStatus>,
+) {
+    let (magnet_transform,_, _) = magnet_query.get_single().unwrap();
+    if magnet_status.on {
+        for (mut piece_force, piece_transform, _) in ext_forces.iter_mut() {
+            let delta = magnet_transform.translation - piece_transform.translation;
+            let direction = delta.normalize();
+            let distance = delta.length();
+            let force = direction * (MAGNET_STRENGTH / (4.0 * PI * distance.powf(2.0)));
+            piece_force.force = force;
+        }
+    }
+}
+
 #[derive(Component, Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct PieceComponent {
     pub piece: Piece,
@@ -347,26 +366,6 @@ fn create_pieces(
                     position,
                 ),
             };
-        }
-    }
-}
-
-/// System that constantly checks the distance between a piece and the magnet.
-/// It then executes a force on the piece towards the magnet based on this distance when the magnet is on.
-fn move_pieces(
-    mut ext_forces: Query<(&mut ExternalForce, &mut Transform, With<PieceComponent>)>,
-    magnet_query: Query<(&Transform, Without<PieceComponent>)>,
-    magnet_status: Res<MagnetStatus>,
-) {
-    let (magnet_transform, _) = magnet_query.get_single().unwrap();
-    // println!("magnet{:?}", magnet);
-    if magnet_status.on {
-        for (mut piece_force, piece_transform, _) in ext_forces.iter_mut() {
-            let delta = magnet_transform.translation - piece_transform.translation;
-            let direction = delta.normalize();
-            let distance = delta.length();
-            let force = direction * (MAGNET_STRENGTH / (4.0 * PI * distance.powf(2.0)));
-            piece_force.force = force;
         }
     }
 }
