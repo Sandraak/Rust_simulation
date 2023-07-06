@@ -40,6 +40,14 @@ pub struct Path {
     pub positions: Vec<Pos>,
 }
 
+impl Default for Path {
+    fn default() -> Self {
+        Self {
+            positions: Default::default(),
+        }
+    }
+}
+
 impl IntoIterator for Path {
     type Item = Pos;
     type IntoIter = <Vec<Pos> as IntoIterator>::IntoIter;

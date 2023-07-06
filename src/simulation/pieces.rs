@@ -37,7 +37,7 @@ fn move_pieces(
     magnet_query: Query<(&Transform, &Magnet, Without<PieceComponent>)>,
     magnet_status: Res<MagnetStatus>,
 ) {
-    let (magnet_transform,_, _) = magnet_query.get_single().unwrap();
+    let (magnet_transform, _, _) = magnet_query.get_single().unwrap();
     if magnet_status.on {
         for (mut piece_force, piece_transform, _) in ext_forces.iter_mut() {
             let delta = magnet_transform.translation - piece_transform.translation;

@@ -39,15 +39,14 @@ pub struct Magnet {
 /// event writer
 ///
 fn signaler(
-    mut magnet_query: Query<(&Transform, &Magnet, Without<Bar>, Without<Carrier>)>,
+    magnet_query: Query<(&Transform, &Magnet, Without<Bar>, Without<Carrier>)>,
     mut magnet_update: EventWriter<MagnetEvent>,
     mut magnet_status: ResMut<MagnetStatus>,
 ) {
-    let (magnet_transform, magnet, _, _) = magnet_query.get_single_mut().unwrap();
+    let (magnet_transform, magnet, _, _) = magnet_query.get_single().unwrap();
     let magnet_direction = Vec3::new(magnet.target_pos.x, MAGNET_Y, magnet.target_pos.y)
         - magnet_transform.translation;
     if magnet_direction.length() <= 0.01 {
-        magnet_status.on = true;
         magnet_status.simulation = true;
         magnet_update.send(MagnetEvent);
     }
