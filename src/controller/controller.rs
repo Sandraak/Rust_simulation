@@ -11,6 +11,7 @@ impl Plugin for ControllerPlugin {
         app.init_resource::<CurrentPaths>()
             .init_resource::<CurrentLocations>()
             .init_resource::<MagnetStatus>()
+            .init_resource::<PlayerTurn>()
             .insert_resource(Destination {
                 goal: Pos { x: 0, y: 0 },
             })
@@ -35,10 +36,14 @@ impl Plugin for ControllerPlugin {
 }
 
 #[derive(Resource, Default)]
+pub struct PlayerTurn {
+    pub turn: bool,
+}
+#[derive(Resource, Default, Debug)]
 pub struct CurrentPaths {
     pub paths: Vec<Path>,
 }
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Debug)]
 pub struct CurrentLocations {
     pub locations: Path,
 }
@@ -64,7 +69,7 @@ impl Default for MagnetStatus {
     fn default() -> Self {
         Self {
             simulation: false,
-            real: false, //needs setup
+            real: true, //needs setup
             on: false,
         }
     }
@@ -76,91 +81,121 @@ pub struct FirstMoveEvent;
 pub struct MagnetEvent;
 pub struct EndTurnEvent;
 
-fn setup(){}
-
+fn setup() {}
 
 /// Wanneer de CurrentMove resource verandert, stuurt de chess computer een MoveEvent dat dit is gebeurd.
 /// update_path reageert op dit event door een PathEvent te sturen
 /// De functie give_path in het Pathfinding component luistert naar dit event en update de CurrentLocations resource.
-fn update_path(_new_move: EventReader<MoveEvent>, mut new_path: EventWriter<PathEvent>) {
-    new_path.send(PathEvent);
+fn update_path(mut new_move: EventReader<MoveEvent>, mut new_path: EventWriter<PathEvent>) {
+    for _event in new_move.iter() {
+        new_path.send(PathEvent);
+        println!("PathEvent send");
+    }
 }
 
 fn update_locations(
     mut current_paths: ResMut<CurrentPaths>,
     mut current_locations: ResMut<CurrentLocations>,
-    _path_update: EventReader<NewPathEvent>,
+    mut path_update: EventReader<NewPathEvent>,
     mut start_move: EventWriter<FirstMoveEvent>,
     mut end_turn: EventWriter<EndTurnEvent>,
 ) {
-    if current_paths.paths.is_empty() {
-        end_turn.send(EndTurnEvent);
+    for _event in path_update.iter() {
+        if current_paths.paths.is_empty() {
+            println!("end turn event");
+            end_turn.send(EndTurnEvent);
+        }
+        else{
+        current_locations.locations = current_paths.paths.first().unwrap().clone();
+        current_paths.paths.remove(0);
+        start_move.send(FirstMoveEvent);
+        println!("FirstMove Event Send!");
+        }
     }
-    current_locations.locations = current_paths.paths.first().unwrap().clone();
-    current_paths.paths.remove(0);
-    start_move.send(FirstMoveEvent);
 }
 
 /// wanneer de locatie bereikt is,
 /// Update de current locatie naar devolgende in de lijst locaties.
 /// Zorg er voor dat de magneten gaan veranderen wanneer deze locatie verandert.
 fn update_current_pos(
-    _magnet_update: EventReader<MagnetEvent>,
-    magnet_status: ResMut<MagnetStatus>,
-    current_locations: ResMut<CurrentLocations>,
-    new_pos: ResMut<Destination>,
-    new_path: EventWriter<NewPathEvent>,
-) {
-    if magnet_status.simulation && magnet_status.real {
-        update_pos(magnet_status, current_locations, new_pos, new_path, true);
-    }
-}
-
-fn set_first_pos(
-    _first_move: EventReader<FirstMoveEvent>,
-    magnet_status: ResMut<MagnetStatus>,
-    current_locations: ResMut<CurrentLocations>,
-    new_pos: ResMut<Destination>,
-    new_path: EventWriter<NewPathEvent>,
-) {
-    update_pos(magnet_status, current_locations, new_pos, new_path, false)
-}
-
-fn update_pos(
+    mut magnet_update: EventReader<MagnetEvent>,
     mut magnet_status: ResMut<MagnetStatus>,
     mut current_locations: ResMut<CurrentLocations>,
     mut new_pos: ResMut<Destination>,
     mut new_path: EventWriter<NewPathEvent>,
-    magnet_on: bool,
 ) {
-    if magnet_status.simulation && magnet_status.real {
-        if current_locations.locations.positions.is_empty() {
-            new_path.send(NewPathEvent);
-        } else {
-            *new_pos = Destination {
-                goal: *current_locations.locations.positions.first().unwrap(),
-            };
-            current_locations.locations.positions.remove(0);
-            magnet_status.simulation = false;
-            magnet_status.real = false;
-            magnet_status.on = magnet_on;
+    for _event in magnet_update.iter(){
+        if magnet_status.simulation && magnet_status.real {
+            update_pos(
+                &mut magnet_status,
+                &mut current_locations,
+                &mut new_pos,
+                &mut new_path,
+                true,
+            );
         }
     }
 }
+
+fn set_first_pos(
+    mut first_move: EventReader<FirstMoveEvent>,
+    mut magnet_status: ResMut<MagnetStatus>,
+    mut current_locations: ResMut<CurrentLocations>,
+    mut new_pos: ResMut<Destination>,
+    mut new_path: EventWriter<NewPathEvent>,
+    mut player_turn: ResMut<PlayerTurn>
+) {
+    for _event in first_move.iter() {
+        println!("set_first_pos");
+        update_pos(
+            &mut magnet_status,
+            &mut current_locations,
+            &mut new_pos,
+            &mut new_path,
+            false,
+        );
+        player_turn.turn =true;
+    }
+}
+
+fn update_pos(
+    magnet_status: &mut ResMut<MagnetStatus>,
+    current_locations: &mut ResMut<CurrentLocations>,
+    new_pos: &mut ResMut<Destination>,
+    new_path: &mut EventWriter<NewPathEvent>,
+    magnet_on: bool,
+) {
+        if current_locations.locations.positions.is_empty() {
+            println!("new path event?");
+            new_path.send(NewPathEvent);
+        } else {
+            let goal = *current_locations.locations.positions.first().unwrap();
+            **new_pos = Destination { goal: goal };
+            current_locations.locations.positions.remove(0);
+            magnet_status.simulation = false;
+            // magnet_status.real = false;
+            magnet_status.on = magnet_on;
+            println!("Set new goal = {:?}, magnet status: {:?}", goal, magnet_status.on);
+        }
+    }
 // }
 
 /// activate when all the locations have been reached.
 /// reset all the resources linked to the current turn.
 /// update the boardstate
 fn end_turn(
-    _end_turn: EventReader<EndTurnEvent>,
+    mut end_turn: EventReader<EndTurnEvent>,
     mut current_locations: ResMut<CurrentPaths>,
     mut magnet_status: ResMut<MagnetStatus>,
+    mut player_turn: ResMut<PlayerTurn>
 ) {
-    *current_locations = CurrentPaths { paths: vec![] };
-    magnet_status.simulation = false;
-    magnet_status.real = false;
-    magnet_status.on = false;
+    for _event in end_turn.iter() {
+        *current_locations = CurrentPaths { paths: vec![] };
+        // magnet_status.simulation = false;
+        // magnet_status.real = false;
+        magnet_status.on = false;
+        player_turn.turn = false;
+    }
 }
 
 // / TODO:

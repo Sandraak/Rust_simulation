@@ -7,7 +7,8 @@ use bevy_rapier3d::{
 
 use crate::{
     chess::*,
-    controller::controller::ControllerPlugin,
+    controller::{controller::ControllerPlugin, ui::UserInterfacePlugin},
+    pathfinding::astar::PathfindingPlugin,
     simulation::board::*,
     simulation::camera::{self, CameraPlugin},
     simulation::frame::*,
@@ -40,10 +41,12 @@ pub fn create_app(screen_width: f32, screen_height: f32) -> App {
             ..Default::default()
         })
         .add_plugin(ControllerPlugin)
+        .add_plugin(PathfindingPlugin)
         .add_plugin(BoardPlugin)
         .add_plugin(MagnetPlugin)
         .add_plugin(PiecesPlugin)
         .add_plugin(FramePlugin)
+        .add_plugin(UserInterfacePlugin)
         .add_plugin(CameraPlugin);
 
     #[cfg(debug_assertions)]

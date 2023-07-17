@@ -6,7 +6,7 @@ use crate::{
         pos::Pos,
         BoardState,
     },
-    controller::controller::*,
+    controller::controller::*, simulation::board,
 };
 
 pub const TEST_MOVE: Move = Move {
@@ -66,25 +66,30 @@ impl Plugin for PathfindingPlugin {
 }
 
 fn give_path(
-    _new_move: EventReader<PathEvent>,
+    mut new_move: EventReader<PathEvent>,
     current_move: Res<CurrentMove>,
     boardstate: Res<BoardState>,
     mut current_locations: ResMut<CurrentPaths>,
     mut new_locations: EventWriter<NewPathEvent>,
 ) {
-    *current_locations = CurrentPaths {
-        paths: calculate_path(&current_move, &boardstate).unwrap(),
-    };
-    new_locations.send(NewPathEvent);
+    for _event in new_move.iter() {
+        println!("Pathevent registered.");
+        *current_locations = CurrentPaths {
+            paths: calculate_path(&current_move, &boardstate).unwrap(),
+        };
+
+        println!("New path event send{:?}", current_locations);
+        new_locations.send(NewPathEvent);
+    }
 }
+
+// fn recursive_path( mov : &Move, boardstate: &BoardState) -> Option<Vec<Path>> {
+
+// }
 
 //cascading?
 
-pub fn calculate_path(
-    mov: &Res<CurrentMove>,
-    boardstate: &Res<BoardState>,
-    // ) -> ResMut<CurrentLocations> {
-) -> Option<Vec<Path>> {
+pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> Option<Vec<Path>> {
     // Lege vector met alle paden
     let mut paths_info: Vec<PathInformation> = vec![];
     // Lege vector met de origele zet en eventueel geslagen stuk
@@ -185,7 +190,7 @@ pub fn calculate_path(
 }
 
 ///Finds the shortest path on the board between a start and end position, based on the current boardstate.
-fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> Option<PathInformation> {
+fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &Res<BoardState>) -> Option<PathInformation> {
     let start_node: Node = Node {
         pos: start_pos,
         distance_to_start: 0,
@@ -224,8 +229,10 @@ fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &BoardState) -> Option<PathI
                 if boardstate.chess[path_node.pos].is_some() && (path_node.pos != start_node.pos) {
                     if boardstate.chess[path_node.pos].is_some() && (path_node.pos == end_pos) {
                         path_info.capture = true;
+                        println!("capture!");
                     } else {
                         path_info.crossed_pieces.push(path_node.pos);
+                        println!("crossed piece");
                     }
                 }
                 path_info.path.positions.push(path_node.pos);
@@ -302,7 +309,7 @@ fn within_bounds(row: isize, col: isize) -> bool {
 }
 
 ///Finds a path to the graveyard for a captured piece.
-fn capture(start_pos: Pos, boardstate: &BoardState) -> Option<PathInformation> {
+fn capture(start_pos: Pos, boardstate: &Res<BoardState>) -> Option<PathInformation> {
     let end_pos = boardstate
         .chess
         .graveyard_positions()

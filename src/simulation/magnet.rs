@@ -1,5 +1,5 @@
 use crate::{
-    controller::controller::{Destination, MagnetEvent, MagnetStatus},
+    controller::controller::{Destination, MagnetEvent, MagnetStatus, PlayerTurn},
     simulation::frame::*,
 };
 use bevy::prelude::*;
@@ -12,15 +12,15 @@ const MAGNET_RADIUS: f32 = 0.25;
 const MAGNET_Y: f32 = -BOARD_HEIGHT - 0.5 * MAGNET_HEIGHT;
 const MAGNET_OFFSET: Vec3 = Vec3::new(-2.25, MAGNET_Y, -2.25);
 
-pub const MAGNET_STRENGTH: f32 = 25.0;
+pub const MAGNET_STRENGTH: f32 = 15.0;
 pub struct MagnetPlugin;
 
 impl Plugin for MagnetPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<FrameColors>()
             .add_startup_system(create_magnet)
-            .add_system(signaler)
-            .add_system(move_magnet);
+            .add_system(move_magnet)
+            .add_system(signaler);
     }
 }
 
@@ -42,14 +42,24 @@ fn signaler(
     magnet_query: Query<(&Transform, &Magnet, Without<Bar>, Without<Carrier>)>,
     mut magnet_update: EventWriter<MagnetEvent>,
     mut magnet_status: ResMut<MagnetStatus>,
+    destination: Res<Destination>,
+    player_turn: ResMut<PlayerTurn>
 ) {
     let (magnet_transform, magnet, _, _) = magnet_query.get_single().unwrap();
-    let magnet_direction = Vec3::new(magnet.target_pos.x, MAGNET_Y, magnet.target_pos.y)
+    let magnet_direction = Vec3::new(destination.goal.x() as f32, MAGNET_Y, destination.goal.y() as f32)
         - magnet_transform.translation;
-    if magnet_direction.length() <= 0.01 {
+
+    if magnet_direction.length() <= 0.01 && !magnet_status.simulation && player_turn.turn {
+        println!("biem");
         magnet_status.simulation = true;
         magnet_update.send(MagnetEvent);
     }
+    // else 
+    // if magnet_direction.length() <= 0.01 && player_turn.turn{
+    //     println!("biem");
+    //     magnet_status.simulation = true;
+    //     magnet_update.send(MagnetEvent);
+    // }
 }
 
 ///System that constantly checks the distance between the desired and true position of magnet.
