@@ -7,12 +7,12 @@ use bevy_rapier3d::prelude::*;
 
 use super::board::BOARD_HEIGHT;
 
-const MAGNET_HEIGHT: f32 = 0.5;
+const MAGNET_HEIGHT: f32 = 0.25;
 const MAGNET_RADIUS: f32 = 0.25;
-const MAGNET_Y: f32 = -BOARD_HEIGHT - 0.5 * MAGNET_HEIGHT;
+const MAGNET_Y: f32 = -BOARD_HEIGHT - 0.3 * MAGNET_HEIGHT;
 const MAGNET_OFFSET: Vec3 = Vec3::new(-2.25, MAGNET_Y, -2.25);
 
-pub const MAGNET_STRENGTH: f32 = 15.0;
+pub const MAGNET_STRENGTH: f32 = 7.5;
 pub struct MagnetPlugin;
 
 impl Plugin for MagnetPlugin {
@@ -45,8 +45,8 @@ fn signaler(
     destination: Res<Destination>,
     player_turn: ResMut<PlayerTurn>
 ) {
-    let (magnet_transform, magnet, _, _) = magnet_query.get_single().unwrap();
-    let magnet_direction = Vec3::new(destination.goal.x() as f32, MAGNET_Y, destination.goal.y() as f32)
+    let (magnet_transform, _magnet, _, _) = magnet_query.get_single().unwrap();
+    let magnet_direction = Vec3::new(destination.goal.y() as f32, MAGNET_Y, destination.goal.x() as f32)
         - magnet_transform.translation;
 
     if magnet_direction.length() <= 0.01 && !magnet_status.simulation && player_turn.turn {
@@ -70,7 +70,7 @@ fn move_magnet(
     destination: Res<Destination>,
 ) {
     let (mut magnet_transform, mut magnet, _, _) = magnet_query.get_single_mut().unwrap();
-    let magnet_direction = Vec3::new(magnet.target_pos.x, MAGNET_Y, magnet.target_pos.y)
+    let magnet_direction = Vec3::new(magnet.target_pos.y, MAGNET_Y, magnet.target_pos.x)
         - magnet_transform.translation;
     // Move magnet towards goal when magnet isn't therre yet.
     if magnet_direction.length() > 0.01 {

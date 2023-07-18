@@ -111,6 +111,7 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
         }
     }
     if no_crossed_pieces {
+        println!("paths no crossed pieces: {:?}", paths_info);
         return Some(
             paths_info
                 .into_iter()
@@ -181,6 +182,7 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
             paths_info.push(path_back);
         }
     }
+    println!("paths: {:?}", paths_info);
     Some(
         paths_info
             .into_iter()
@@ -197,7 +199,6 @@ fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &Res<BoardState>) -> Option<
         distance_to_end: start_pos.distance(end_pos) as u8,
         parent: None,
     };
-
     if !within_bounds(start_pos.x, start_pos.y) || !within_bounds(end_pos.x, end_pos.y) {
         println!("start or end position not on the board");
         return None;
@@ -228,6 +229,7 @@ fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &Res<BoardState>) -> Option<
                 //Check if there are any crossed pieces. The moving piece is not an obstructing piece.
                 if boardstate.chess[path_node.pos].is_some() && (path_node.pos != start_node.pos) {
                     if boardstate.chess[path_node.pos].is_some() && (path_node.pos == end_pos) {
+                        println!("piece that will be captured? : {:?}", boardstate.chess[path_node.pos]);
                         path_info.capture = true;
                         println!("capture!");
                     } else {

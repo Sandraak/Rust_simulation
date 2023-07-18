@@ -62,7 +62,16 @@ impl Chess {
             [None, None, None, None, None, None, None, None],
             [None, None, None, None, None, None, None, None],
             [None, None, None, None, None, None, None, None],
-            [None, None, None, None, None, None, None, None],
+            [
+                Some(Piece::WHITE_PAWN),
+                Some(Piece::WHITE_PAWN),
+                Some(Piece::WHITE_PAWN),
+                Some(Piece::WHITE_PAWN),
+                Some(Piece::WHITE_PAWN),
+                Some(Piece::WHITE_PAWN),
+                Some(Piece::WHITE_PAWN),
+                Some(Piece::WHITE_PAWN),
+            ],
             [
                 Some(Piece::WHITE_PAWN),
                 Some(Piece::WHITE_PAWN),

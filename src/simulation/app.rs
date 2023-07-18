@@ -30,7 +30,7 @@ pub fn create_app(screen_width: f32, screen_height: f32) -> App {
             ..default()
         }))
         .insert_resource(RapierConfiguration {
-            gravity: Vec3::new(0.0, -9.81, 0.0),
+            gravity: Vec3::new(0.0, -90.81, 0.0),
             ..default()
         })
         .insert_resource(camera::PrimaryWindowResolution { resolution })

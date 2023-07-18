@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{
     CoefficientCombineRule, Collider, ColliderMassProperties, ExternalForce, Friction,
-    MassProperties, Restitution, RigidBody,
+    MassProperties, Restitution, RigidBody, Damping,
 };
 
 use crate::chess::{chess::Piece, BoardState};
@@ -12,13 +12,13 @@ use crate::simulation::magnet::*;
 
 const SPAWN_HEIGHT: f32 = 0.0;
 const PIECES_HEIGHT: f32 = 1.75;
-const PIECES_RADIUS: f32 = 0.45;
+const PIECES_RADIUS: f32 = 0.25;
 const PIECES_OFFSET: Vec3 = Vec3::new(0.0, SPAWN_HEIGHT + 0.66 * PIECES_HEIGHT, 0.0);
 const PIECES_TRANSFORM: Vec3 = Vec3::new(0.2, 0.2, 0.2);
-const PIECES_WEIGHT_CENTER: Vec3 = Vec3::new(0.0, 0.5 * PIECES_HEIGHT, 0.0);
+const PIECES_WEIGHT_CENTER: Vec3 = Vec3::new(0.0, 0.2 * PIECES_HEIGHT, 0.0);
 
-const PIECES_MASS: f32 = 0.5;
-const PIECES_FRICTION: f32 = 0.1;
+const PIECES_MASS: f32 = 0.2;
+const PIECES_FRICTION: f32 = 1.0;
 const PIECES_RESTITUTION: f32 = 0.0;
 
 pub struct PiecesPlugin;
@@ -70,6 +70,7 @@ fn add_collider(parent: &mut ChildBuilder) {
             coefficient: PIECES_FRICTION,
             combine_rule: CoefficientCombineRule::Max,
         })
+        .insert(Damping { linear_damping: 10.0, angular_damping: 10.0 })
         .insert(Transform::from_translation(PIECES_OFFSET));
 }
 
@@ -281,6 +282,10 @@ pub fn spawn_pawn(
             });
         })
         .insert(RigidBody::Dynamic)
+        .insert(Friction {
+            coefficient: PIECES_FRICTION,
+            combine_rule: CoefficientCombineRule::Max,
+        })
         .with_children(add_collider);
 }
 
@@ -312,7 +317,7 @@ fn create_pieces(
             pieces
                 .iter()
                 .enumerate()
-                .map(move |(col, piece)| ((7 - row, col), piece))
+                .map(move |(col, piece)| ((row, col), piece))
         })
     {
         if let Some(piece) = piece {

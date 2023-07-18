@@ -33,7 +33,7 @@ fn perform_move(
     mut pieces_query: Query<(&mut PieceComponent, Entity)>,
     mut new_move: EventWriter<MoveEvent>,
     mut current_move: ResMut<CurrentMove>,
-    mut player_turn: ResMut<PlayerTurn>,
+    player_turn: Res<PlayerTurn>,
     // mut magnet_query: Query<&mut Magnet>,
 ) {
     if !player_turn.turn {
@@ -74,12 +74,12 @@ fn perform_move(
             *current_move = controller::CurrentMove {
                 current_move: Move {
                     from: Pos {
-                        x: selected_piece_com.target_x as isize,
-                        y: selected_piece_com.target_y as isize,
+                        x: selected_piece_com.target_y as isize,
+                        y: selected_piece_com.target_x as isize,
                     },
                     to: Pos {
-                        x: selected_square.selected.unwrap().x as isize,
-                        y: selected_square.selected.unwrap().y as isize,
+                        x: selected_square.selected.unwrap().y as isize,
+                        y: selected_square.selected.unwrap().x as isize,
                     },
                 },
             };

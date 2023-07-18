@@ -1,10 +1,11 @@
 use bevy::prelude::*;
 use bevy_mod_picking::{Hover, PickableBundle, Selection};
-use bevy_rapier3d::prelude::{Collider, RigidBody};
+use bevy_rapier3d::prelude::{Collider, RigidBody, CoefficientCombineRule, Friction};
 
 // use crate::pieces::PieceComponent;
 
 pub const SMALL_FLOAT: f32 = 0.01;
+const BOARD_FRICTION: f32 = 0.8;
 
 pub const BOARD_LENGTH: f32 = 10.0;
 pub const BOARD_WIDTH: f32 = 14.0;
@@ -71,16 +72,6 @@ pub struct Square {
     pub x: u8,
     pub y: u8,
 }
-
-// #[derive(Default, Resource)]
-// struct SelectedSquare {
-//     _selected: Option<Square>,
-// }
-
-// #[derive(Default, Resource, Debug)]
-// struct SelectedPiece {
-//     _selected: Option<Entity>,
-// }
 
 fn is_white(x: u8, y: u8) -> bool {
     (x + y + 1) % 2 == 0
@@ -170,6 +161,9 @@ fn create_border(
                     0.5 * BOARD_HEIGHT,
                     0.5 * BOARD_WIDTH,
                 ))
+                .insert(Friction {
+                    coefficient: BOARD_FRICTION,
+                    combine_rule: CoefficientCombineRule::Max,})
                 .insert(Transform::from_translation(BOARD_OFFSET));
         });
 }
