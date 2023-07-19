@@ -104,12 +104,11 @@ fn update_locations(
         if current_paths.paths.is_empty() {
             println!("end turn event");
             end_turn.send(EndTurnEvent);
-        }
-        else{
-        current_locations.locations = current_paths.paths.first().unwrap().clone();
-        current_paths.paths.remove(0);
-        start_move.send(FirstMoveEvent);
-        println!("FirstMove Event Send!");
+        } else {
+            current_locations.locations = current_paths.paths.first().unwrap().clone();
+            current_paths.paths.remove(0);
+            start_move.send(FirstMoveEvent);
+            println!("FirstMove Event Send!");
         }
     }
 }
@@ -124,7 +123,7 @@ fn update_current_pos(
     mut new_pos: ResMut<Destination>,
     mut new_path: EventWriter<NewPathEvent>,
 ) {
-    for _event in magnet_update.iter(){
+    for _event in magnet_update.iter() {
         if magnet_status.simulation && magnet_status.real {
             update_pos(
                 &mut magnet_status,
@@ -143,7 +142,7 @@ fn set_first_pos(
     mut current_locations: ResMut<CurrentLocations>,
     mut new_pos: ResMut<Destination>,
     mut new_path: EventWriter<NewPathEvent>,
-    mut player_turn: ResMut<PlayerTurn>
+    mut player_turn: ResMut<PlayerTurn>,
 ) {
     for _event in first_move.iter() {
         println!("set_first_pos");
@@ -154,7 +153,7 @@ fn set_first_pos(
             &mut new_path,
             false,
         );
-        player_turn.turn =true;
+        player_turn.turn = true;
     }
 }
 
@@ -165,19 +164,22 @@ fn update_pos(
     new_path: &mut EventWriter<NewPathEvent>,
     magnet_on: bool,
 ) {
-        if current_locations.locations.positions.is_empty() {
-            println!("new path event?");
-            new_path.send(NewPathEvent);
-        } else {
-            let goal = *current_locations.locations.positions.first().unwrap();
-            **new_pos = Destination { goal: goal };
-            current_locations.locations.positions.remove(0);
-            magnet_status.simulation = false;
-            // magnet_status.real = false;
-            magnet_status.on = magnet_on;
-            println!("Set new goal = {:?}, magnet status: {:?}", goal, magnet_status.on);
-        }
+    if current_locations.locations.positions.is_empty() {
+        println!("new path event?");
+        new_path.send(NewPathEvent);
+    } else {
+        let goal = *current_locations.locations.positions.first().unwrap();
+        **new_pos = Destination { goal: goal };
+        current_locations.locations.positions.remove(0);
+        magnet_status.simulation = false;
+        // magnet_status.real = false;
+        magnet_status.on = magnet_on;
+        println!(
+            "Set new goal = {:?}, magnet status: {:?}",
+            goal, magnet_status.on
+        );
     }
+}
 // }
 
 /// activate when all the locations have been reached.
@@ -187,7 +189,7 @@ fn end_turn(
     mut end_turn: EventReader<EndTurnEvent>,
     mut current_locations: ResMut<CurrentPaths>,
     mut magnet_status: ResMut<MagnetStatus>,
-    mut player_turn: ResMut<PlayerTurn>
+    mut player_turn: ResMut<PlayerTurn>,
 ) {
     for _event in end_turn.iter() {
         *current_locations = CurrentPaths { paths: vec![] };

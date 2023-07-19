@@ -43,18 +43,21 @@ fn signaler(
     mut magnet_update: EventWriter<MagnetEvent>,
     mut magnet_status: ResMut<MagnetStatus>,
     destination: Res<Destination>,
-    player_turn: ResMut<PlayerTurn>
+    player_turn: ResMut<PlayerTurn>,
 ) {
     let (magnet_transform, _magnet, _, _) = magnet_query.get_single().unwrap();
-    let magnet_direction = Vec3::new(destination.goal.y() as f32, MAGNET_Y, destination.goal.x() as f32)
-        - magnet_transform.translation;
+    let magnet_direction = Vec3::new(
+        destination.goal.y() as f32,
+        MAGNET_Y,
+        destination.goal.x() as f32,
+    ) - magnet_transform.translation;
 
     if magnet_direction.length() <= 0.01 && !magnet_status.simulation && player_turn.turn {
         println!("biem");
         magnet_status.simulation = true;
         magnet_update.send(MagnetEvent);
     }
-    // else 
+    // else
     // if magnet_direction.length() <= 0.01 && player_turn.turn{
     //     println!("biem");
     //     magnet_status.simulation = true;

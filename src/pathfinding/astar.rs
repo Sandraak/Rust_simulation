@@ -6,12 +6,8 @@ use crate::{
         pos::Pos,
         BoardState,
     },
-    controller::controller::*, simulation::board,
-};
-
-pub const TEST_MOVE: Move = Move {
-    from: Pos { x: 3, y: 2 },
-    to: Pos { x: 3, y: 7 },
+    controller::controller::*,
+    simulation::board,
 };
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
@@ -28,7 +24,7 @@ impl Node {
     }
 }
 ///All the positions and crossed pieces in separate vectors
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 struct PathInformation {
     path: Path,
     crossed_pieces: Vec<Pos>,
@@ -125,10 +121,18 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
         let mut obstructing_pieces: Vec<Move> = vec![];
 
         for mut path_info in priority_paths_info {
+            println!(
+                "obstructing pieces in priority_paths_info {:?}",
+                obstructing_pieces
+            );
             for piece in path_info.crossed_pieces.clone() {
                 // Vind een goede eind locatie voor het uitwijkende stuk.
                 let locations = find_end_pos(piece, &paths_info, boardstate, &obstructing_pieces);
                 // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector obstructing_pieces.
+                // if !obstructing_pieces
+                //     .iter()
+                //     .any(|mov| mov.from == locations.from)
+                // {
                 if !obstructing_pieces.contains(&locations) {
                     obstructing_pieces.push(locations);
                 }
@@ -142,6 +146,10 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
                     paths_info.push(path_info);
                 }
             }
+            println!(
+                "paths voor de obstructing pieces van het priority path {:?}",
+                paths_info
+            );
         }
         // Het kan zijn dat een stuk moet uitwijken over een pad waar ook een stuk op staat.
         // Dit stuk moet dan ook uitwijken.
@@ -159,7 +167,14 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
                         // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector.
                         // Verwijder het stuk uit de crossed pieces vector, zodat de loop ooit stopt.
                         if !obstructing_pieces.contains(&locations) {
-                            obstructing_pieces.push(locations);
+                            if !obstructing_pieces
+                                .iter()
+                                .any(|mov| mov.from == locations.from)
+                            {
+                                obstructing_pieces.insert(0, locations);
+                            } else {
+                                obstructing_pieces.push(locations);
+                            }
                         }
                         path_info.crossed_pieces.pop();
                     }
@@ -176,10 +191,17 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
         // moeten de paden in paths omgedraaid worden uitgevoerd,
         // wanneer de originele zet is uitgevoerd moeten de stukken worden terug gezet.
         paths_info.reverse();
-        let reversed = obstructing_pieces.clone();
-        for piece in reversed {
-            let path_back = a_star(piece.to, piece.from, boardstate)?;
+        let mut paths_info_normal = paths_info.clone();
+        paths_info_normal.reverse();
+        for path in paths_info_normal.clone(){
+            let mut path_back = PathInformation::default();
+            let compare_path = path.clone();
+            path_back.path.positions = path.path.positions;
+            path_back.path.positions.reverse();
+
+            if original_path_info.path  != compare_path.path{
             paths_info.push(path_back);
+            }
         }
     }
     println!("paths: {:?}", paths_info);
@@ -229,7 +251,10 @@ fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &Res<BoardState>) -> Option<
                 //Check if there are any crossed pieces. The moving piece is not an obstructing piece.
                 if boardstate.chess[path_node.pos].is_some() && (path_node.pos != start_node.pos) {
                     if boardstate.chess[path_node.pos].is_some() && (path_node.pos == end_pos) {
-                        println!("piece that will be captured? : {:?}", boardstate.chess[path_node.pos]);
+                        println!(
+                            "piece that will be captured? : {:?}",
+                            boardstate.chess[path_node.pos]
+                        );
                         path_info.capture = true;
                         println!("capture!");
                     } else {

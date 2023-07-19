@@ -2,8 +2,8 @@ use std::f32::consts::PI;
 
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{
-    CoefficientCombineRule, Collider, ColliderMassProperties, ExternalForce, Friction,
-    MassProperties, Restitution, RigidBody, Damping,
+    CoefficientCombineRule, Collider, ColliderMassProperties, Damping, ExternalForce, Friction,
+    MassProperties, Restitution, RigidBody,
 };
 
 use crate::chess::{chess::Piece, BoardState};
@@ -70,7 +70,10 @@ fn add_collider(parent: &mut ChildBuilder) {
             coefficient: PIECES_FRICTION,
             combine_rule: CoefficientCombineRule::Max,
         })
-        .insert(Damping { linear_damping: 10.0, angular_damping: 10.0 })
+        .insert(Damping {
+            linear_damping: 10.0,
+            angular_damping: 10.0,
+        })
         .insert(Transform::from_translation(PIECES_OFFSET));
 }
 

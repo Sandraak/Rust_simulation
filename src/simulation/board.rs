@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_mod_picking::{Hover, PickableBundle, Selection};
-use bevy_rapier3d::prelude::{Collider, RigidBody, CoefficientCombineRule, Friction};
+use bevy_rapier3d::prelude::{CoefficientCombineRule, Collider, Friction, RigidBody};
 
 // use crate::pieces::PieceComponent;
 
@@ -163,7 +163,8 @@ fn create_border(
                 ))
                 .insert(Friction {
                     coefficient: BOARD_FRICTION,
-                    combine_rule: CoefficientCombineRule::Max,})
+                    combine_rule: CoefficientCombineRule::Max,
+                })
                 .insert(Transform::from_translation(BOARD_OFFSET));
         });
 }
