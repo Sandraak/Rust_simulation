@@ -41,6 +41,7 @@ fn perform_move(
             return;
         }
         //selects the piece that was clicked on
+        if selected_piece.selected.is_none(){
         for (square, interaction) in square_query.iter_mut() {
             if let Interaction::Clicked = interaction {
                 let optional_piece = pieces_query.into_iter().find(|piece| {
@@ -55,6 +56,7 @@ fn perform_move(
                 }
             }
         }
+    }
         // When a piece is selected, selects a square to where the selected piece will move.
         if selected_piece.selected.is_some() {
             for (square, interaction) in square_query.iter_mut() {

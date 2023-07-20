@@ -96,7 +96,7 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
     // Is er een stuk geslagen?
     if original_path_info.capture {
         capture_path_info = capture(mov.current_move.to, boardstate)?;
-        paths_info.push(capture_path_info.clone());
+        paths_info.insert(0,capture_path_info.clone());
     }
     let mut no_crossed_pieces = true;
     for path_info in paths_info.clone() {
