@@ -80,9 +80,7 @@ fn give_path(
 }
 
 // fn recursive_path( mov : &Move, boardstate: &BoardState) -> Option<Vec<Path>> {
-
 // }
-
 //cascading?
 
 pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> Option<Vec<Path>> {
@@ -129,10 +127,6 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
                 // Vind een goede eind locatie voor het uitwijkende stuk.
                 let locations = find_end_pos(piece, &paths_info, boardstate, &obstructing_pieces);
                 // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector obstructing_pieces.
-                // if !obstructing_pieces
-                //     .iter()
-                //     .any(|mov| mov.from == locations.from)
-                // {
                 if !obstructing_pieces.contains(&locations) {
                     obstructing_pieces.push(locations);
                 }
@@ -167,14 +161,17 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
                         // Voeg de start en eind locaties van de uitwijkende stukken toe aan de vector.
                         // Verwijder het stuk uit de crossed pieces vector, zodat de loop ooit stopt.
                         if !obstructing_pieces.contains(&locations) {
-                            if !obstructing_pieces
-                                .iter()
-                                .any(|mov| mov.from == locations.from)
-                            {
-                                obstructing_pieces.insert(0, locations);
-                            } else {
-                                obstructing_pieces.push(locations);
-                            }
+                            // if !obstructing_pieces
+                            //     .iter()
+                            //     .any(|mov| mov.from == locations.from)
+                            // {
+                                // obstructing_pieces.insert(0, locations);
+                            // } else {
+                            
+                            // maybe nadenken of ie al in het originele pad zit en of ie daar al wordt verplaatst?
+                            // Wordt dan wel weer fucken met de volgorde.
+                            obstructing_pieces.push(locations);
+                            // }
                         }
                         path_info.crossed_pieces.pop();
                     }
@@ -193,14 +190,14 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
         paths_info.reverse();
         let mut paths_info_normal = paths_info.clone();
         paths_info_normal.reverse();
-        for path in paths_info_normal.clone(){
+        for path in paths_info_normal.clone() {
             let mut path_back = PathInformation::default();
             let compare_path = path.clone();
             path_back.path.positions = path.path.positions;
             path_back.path.positions.reverse();
 
-            if original_path_info.path  != compare_path.path{
-            paths_info.push(path_back);
+            if original_path_info.path != compare_path.path {
+                paths_info.push(path_back);
             }
         }
     }
