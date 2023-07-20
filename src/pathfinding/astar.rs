@@ -96,7 +96,11 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
     // Is er een stuk geslagen?
     if original_path_info.capture {
         capture_path_info = capture(mov.current_move.to, boardstate)?;
-        paths_info.insert(0,capture_path_info.clone());
+        if original_path_info.crossed_pieces.is_empty() {
+            paths_info.insert(0, capture_path_info.clone());
+        } else {
+            paths_info.push(capture_path_info.clone());
+        }
     }
     let mut no_crossed_pieces = true;
     for path_info in paths_info.clone() {
@@ -165,9 +169,9 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
                             //     .iter()
                             //     .any(|mov| mov.from == locations.from)
                             // {
-                                // obstructing_pieces.insert(0, locations);
+                            // obstructing_pieces.insert(0, locations);
                             // } else {
-                            
+
                             // maybe nadenken of ie al in het originele pad zit en of ie daar al wordt verplaatst?
                             // Wordt dan wel weer fucken met de volgorde.
                             obstructing_pieces.push(locations);
@@ -196,7 +200,9 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
             path_back.path.positions = path.path.positions;
             path_back.path.positions.reverse();
 
-            if original_path_info.path != compare_path.path {
+            if original_path_info.path != compare_path.path
+                && capture_path_info.path != compare_path.path
+            {
                 paths_info.push(path_back);
             }
         }

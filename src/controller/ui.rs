@@ -41,22 +41,22 @@ fn perform_move(
             return;
         }
         //selects the piece that was clicked on
-        if selected_piece.selected.is_none(){
-        for (square, interaction) in square_query.iter_mut() {
-            if let Interaction::Clicked = interaction {
-                let optional_piece = pieces_query.into_iter().find(|piece| {
-                    piece.0.target_x as u8 == square.x && piece.0.target_y as u8 == square.y
-                });
-                if optional_piece.is_some() {
-                    // Add the identifier of the piece entity to selected_piece. This identifier is later used to query the location of the selected piece.
-                    selected_piece.selected = Some(optional_piece.unwrap().1);
-                    info!("selected piece: {:?}", optional_piece);
-                    //return so that the selected square won't be the same as the square the selected piece is on.
-                    return;
+        if selected_piece.selected.is_none() {
+            for (square, interaction) in square_query.iter_mut() {
+                if let Interaction::Clicked = interaction {
+                    let optional_piece = pieces_query.into_iter().find(|piece| {
+                        piece.0.target_x as u8 == square.x && piece.0.target_y as u8 == square.y
+                    });
+                    if optional_piece.is_some() {
+                        // Add the identifier of the piece entity to selected_piece. This identifier is later used to query the location of the selected piece.
+                        selected_piece.selected = Some(optional_piece.unwrap().1);
+                        info!("selected piece: {:?}", optional_piece);
+                        //return so that the selected square won't be the same as the square the selected piece is on.
+                        return;
+                    }
                 }
             }
         }
-    }
         // When a piece is selected, selects a square to where the selected piece will move.
         if selected_piece.selected.is_some() {
             for (square, interaction) in square_query.iter_mut() {
