@@ -150,8 +150,7 @@ pub struct Chess {
 ///Board staat nu verkeerd om, ff omdraaien.
 impl Chess {
     pub fn new() -> Self {
-        let board = TEST_BOARD_2;
-        
+        let board = TEST_BOARD_1;
         // [
         //     [
         //         Some(Piece::WHITE_ROOK),
@@ -207,7 +206,6 @@ impl Chess {
         //         Some(Piece::BLACK_ROOK),
         //     ],
         // ];
-
         let turn = Color::default();
         let kings = [Pos::new(4, 7), Pos::new(4, 0)];
         let graveyards = [Graveyard::default(), Graveyard::default()];

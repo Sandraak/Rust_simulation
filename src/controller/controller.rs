@@ -165,7 +165,7 @@ fn update_pos(
     magnet_on: bool,
 ) {
     if current_locations.locations.positions.is_empty() {
-        println!("new path event?");
+        println!("new path event");
         new_path.send(NewPathEvent);
     } else {
         let goal = *current_locations.locations.positions.first().unwrap();

@@ -53,7 +53,7 @@ fn signaler(
     ) - magnet_transform.translation;
 
     if magnet_direction.length() <= 0.01 && !magnet_status.simulation && player_turn.turn {
-        println!("biem");
+        println!("Magnet reached destination, event send");
         magnet_status.simulation = true;
         magnet_update.send(MagnetEvent);
     }

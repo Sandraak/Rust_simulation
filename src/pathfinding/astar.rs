@@ -1,5 +1,4 @@
 use bevy::prelude::{App, EventReader, EventWriter, Plugin, Res, ResMut};
-
 use crate::{
     chess::{
         chess::{Chess, Move},
@@ -7,7 +6,6 @@ use crate::{
         BoardState,
     },
     controller::controller::*,
-    simulation::board,
 };
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
@@ -109,7 +107,7 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
         }
     }
     if no_crossed_pieces {
-        println!("paths no crossed pieces: {:?}", paths_info);
+        // println!("paths no crossed pieces: {:?}", paths_info);
         return Some(
             paths_info
                 .into_iter()
@@ -123,10 +121,10 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
         let mut obstructing_pieces: Vec<Move> = vec![];
 
         for mut path_info in priority_paths_info {
-            println!(
-                "obstructing pieces in priority_paths_info {:?}",
-                obstructing_pieces
-            );
+            // println!(
+            //     "obstructing pieces in priority_paths_info {:?}",
+            //     obstructing_pieces
+            // );
             for piece in path_info.crossed_pieces.clone() {
                 // Vind een goede eind locatie voor het uitwijkende stuk.
                 let locations = find_end_pos(piece, &paths_info, boardstate, &obstructing_pieces);
@@ -144,10 +142,10 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
                     paths_info.push(path_info);
                 }
             }
-            println!(
-                "paths voor de obstructing pieces van het priority path {:?}",
-                paths_info
-            );
+            // println!(
+            //     "paths voor de obstructing pieces van het priority path {:?}",
+            //     paths_info
+            // );
         }
         // Het kan zijn dat een stuk moet uitwijken over een pad waar ook een stuk op staat.
         // Dit stuk moet dan ook uitwijken.
@@ -207,7 +205,7 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
             }
         }
     }
-    println!("paths: {:?}", paths_info);
+    // println!("paths: {:?}", paths_info);
     Some(
         paths_info
             .into_iter()
@@ -248,21 +246,21 @@ fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &Res<BoardState>) -> Option<
         // Begin bij de laatste node en kijk naar de node met de positie van parent,
         // kijk vervolgens naar zijn parent, doe dit tot de start node, dus tot parent none is.
         if current.pos == end_pos {
-            println!("End reached!");
+            // println!("End reached!");
             let mut path_node = current;
             loop {
                 //Check if there are any crossed pieces. The moving piece is not an obstructing piece.
                 if boardstate.chess[path_node.pos].is_some() && (path_node.pos != start_node.pos) {
                     if boardstate.chess[path_node.pos].is_some() && (path_node.pos == end_pos) {
-                        println!(
-                            "piece that will be captured? : {:?}",
-                            boardstate.chess[path_node.pos]
-                        );
+                        // println!(
+                        //     "piece that will be captured? : {:?}",
+                        //     boardstate.chess[path_node.pos]
+                        // );
                         path_info.capture = true;
-                        println!("capture!");
+                        // println!("capture!");
                     } else {
                         path_info.crossed_pieces.push(path_node.pos);
-                        println!("crossed piece");
+                        // println!("crossed piece");
                     }
                 }
                 path_info.path.positions.push(path_node.pos);
@@ -353,6 +351,7 @@ fn capture(start_pos: Pos, boardstate: &Res<BoardState>) -> Option<PathInformati
     a_star(start_pos, end_pos, boardstate)
 }
 
+/// TODO! Vind uitwijk locatie op de rand buiten het bord!
 /// Alle obstructing pieces moeten aan de kant
 /// De posities van de obstructing pieces worden op geslagen in path.crossed_pieces.
 /// De functie moet de obstructing pieces verplaatsen naar lege plekken op het bord (dus niet op het pad),
@@ -366,7 +365,7 @@ fn capture(start_pos: Pos, boardstate: &Res<BoardState>) -> Option<PathInformati
 /// Geen obstructing piece? => verplaats het laatst gecheckte stuk naar zijn end pos?
 /// PROBLEEM?   De boardstate wordt tijdens het vinden van een pad niet geupdate
 ///             Hierdoor worden de oude locaties van stukken die uit de weg gaan niet als vrij gezien.
-///             Deze als vrij markeren is ook geen oplossing want ze later zijn ze wellicht wel bezet  
+///             Leidt tot "schaduwstukken"
 /// Oplossingen?
 ///            Alles steeds opnieuw checken?
 fn find_end_pos(
