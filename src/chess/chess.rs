@@ -335,8 +335,3 @@ pub struct Move {
     pub to: Pos,
 }
 
-// impl Move {
-//     fn new(from: Pos, to: Pos) -> Self {
-//         Move { from, to }
-//     }
-// }

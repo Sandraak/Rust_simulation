@@ -9,7 +9,7 @@ use crate::{
 };
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
-pub struct Node {
+struct Node {
     pos: Pos,
     distance_to_start: u8,
     distance_to_end: u8,
@@ -81,7 +81,7 @@ fn give_path(
 // }
 //cascading?
 
-pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> Option<Vec<Path>> {
+fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> Option<Vec<Path>> {
     // Lege vector met alle paden
     let mut paths_info: Vec<PathInformation> = vec![];
     // Lege vector met de origele zet en eventueel geslagen stuk
@@ -142,10 +142,6 @@ pub fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> O
                     paths_info.push(path_info);
                 }
             }
-            // println!(
-            //     "paths voor de obstructing pieces van het priority path {:?}",
-            //     paths_info
-            // );
         }
         // Het kan zijn dat een stuk moet uitwijken over een pad waar ook een stuk op staat.
         // Dit stuk moet dan ook uitwijken.
@@ -246,18 +242,16 @@ fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &Res<BoardState>) -> Option<
         // Begin bij de laatste node en kijk naar de node met de positie van parent,
         // kijk vervolgens naar zijn parent, doe dit tot de start node, dus tot parent none is.
         if current.pos == end_pos {
-            // println!("End reached!");
             let mut path_node = current;
             loop {
                 //Check if there are any crossed pieces. The moving piece is not an obstructing piece.
                 if boardstate.chess[path_node.pos].is_some() && (path_node.pos != start_node.pos) {
                     if boardstate.chess[path_node.pos].is_some() && (path_node.pos == end_pos) {
+                        path_info.capture = true;
                         // println!(
                         //     "piece that will be captured? : {:?}",
                         //     boardstate.chess[path_node.pos]
                         // );
-                        path_info.capture = true;
-                        // println!("capture!");
                     } else {
                         path_info.crossed_pieces.push(path_node.pos);
                         // println!("crossed piece");
