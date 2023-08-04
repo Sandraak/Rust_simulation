@@ -70,12 +70,17 @@ fn signaler(
 fn move_magnet(
     time: Res<Time>,
     mut magnet_query: Query<(&mut Transform, &mut Magnet, Without<Bar>, Without<Carrier>)>,
-    destination: Res<Destination>,
+    destination: Res<Destination>
 ) {
     let (mut magnet_transform, mut magnet, _, _) = magnet_query.get_single_mut().unwrap();
     let magnet_direction = Vec3::new(magnet.target_pos.y, MAGNET_Y, magnet.target_pos.x)
         - magnet_transform.translation;
-    // Move magnet towards goal when magnet isn't therre yet.
+    // Move magnet towards goal when magnet isn't there yet.
+    // let speed:f32 = 1.0;
+    // if !magnet_status.on{
+    //     speed = 3.0;
+    // }
+
     if magnet_direction.length() > 0.01 {
         magnet_transform.translation += magnet_direction.normalize() * time.delta_seconds();
     } else {
@@ -83,48 +88,6 @@ fn move_magnet(
         magnet.target_pos.x = destination.goal.x() as f32;
         magnet.target_pos.y = destination.goal.y() as f32;
     }
-    //test
-    // {
-
-    // // let positions: Vec<Pos> = vec![
-    // //     Pos { x: 1, y: 1 },
-    // //     Pos { x: 2, y: 2 },
-    // //     Pos { x: 2, y: 3 },
-    // //     Pos { x: 2, y: 4 },
-    // //     Pos { x: 3, y: 4 },
-    // //     Pos { x: 4, y: 4 },
-    // //     Pos { x: 5, y: 4 },
-    // // ];
-    //     info!(
-    //         "goal: {:?}, {:?} reached, magnet status: {:?}",
-    //         magnet.target_pos.x, magnet.target_pos.y, magnet.on
-    //     );
-    //     // thread::sleep(time::Duration::from_millis(1000));
-    //     if let Ok((_, mut magnet, _, _)) = magnet_query.get_single_mut() {
-    //         if magnet.positions_reached < positions.len() {
-    //             magnet.target_pos.x = positions[magnet.positions_reached].x as f32;
-    //             magnet.target_pos.y = positions[magnet.positions_reached].y as f32;
-    //             info!(
-    //                 "Moving to {:?}, {:?}, magnet status: {:?}",
-    //                 magnet.target_pos.x, magnet.target_pos.y, magnet.on
-    //             );
-    //             magnet.positions_reached += 1;
-    //             magnet.on = true;
-    //         } else {
-    //             // End goal has been reached,
-    //             magnet.positions_reached = 0;
-    //             magnet.on = false;
-    //             info!(
-    //                 "END goal: {:?}, {:?} reached, magnet status: {:?},",
-    //                 magnet.target_pos.x, magnet.target_pos.y, magnet.on
-    //             );
-    //             //Need to wait for new vector with positions. For now loop, so start again at 0 without turning on the magnet.
-    //             magnet.target_pos.x = positions[magnet.positions_reached].x as f32;
-    //             magnet.target_pos.y = positions[magnet.positions_reached].y as f32;
-    //             // Now the function will loop again because magnet.positions_reached = 0;
-    //         }
-    //     }
-    // }
 }
 
 fn create_magnet(

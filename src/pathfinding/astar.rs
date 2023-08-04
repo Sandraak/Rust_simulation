@@ -292,8 +292,8 @@ fn a_star(start_pos: Pos, end_pos: Pos, boardstate: &Res<BoardState>) -> Option<
                     let distance_to_start: u8 = current.distance_to_start + cost; // schuin is even snel als rechtdoor
                     let distance = pos.distance(end_pos);
                     let neighbor: Node = Node {
-                        pos: pos,
-                        distance_to_start: distance_to_start,
+                        pos,
+                        distance_to_start,
                         distance_to_end: distance as u8,
                         parent: Some(current.pos),
                     };

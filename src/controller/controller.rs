@@ -169,7 +169,7 @@ fn update_pos(
         new_path.send(NewPathEvent);
     } else {
         let goal = *current_locations.locations.positions.first().unwrap();
-        **new_pos = Destination { goal: goal };
+        **new_pos = Destination { goal };
         current_locations.locations.positions.remove(0);
         magnet_status.simulation = false;
         // magnet_status.real = false;

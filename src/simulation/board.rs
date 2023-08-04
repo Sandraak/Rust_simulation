@@ -7,13 +7,13 @@ use bevy_rapier3d::prelude::{CoefficientCombineRule, Collider, Friction, RigidBo
 pub const SMALL_FLOAT: f32 = 0.01;
 const BOARD_FRICTION: f32 = 0.8;
 
-pub const BOARD_LENGTH: f32 = 10.0;
+pub const BOARD_LENGTH: f32 = 12.0;
 pub const BOARD_WIDTH: f32 = 14.0;
 pub const BOARD_HEIGHT: f32 = 0.25;
 const BOARD_OFFSET: Vec3 = Vec3::new(
-    0.5 * BOARD_WIDTH - 2.5,
+    0.5 * BOARD_WIDTH - 3.5,
     -0.5 * BOARD_HEIGHT,
-    0.5 * BOARD_LENGTH - 1.5,
+    0.5 * BOARD_LENGTH - 2.5,
 );
 pub struct BoardPlugin;
 
