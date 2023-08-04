@@ -12,7 +12,7 @@ use crate::simulation::magnet::*;
 
 const SPAWN_HEIGHT: f32 = 0.0;
 const PIECES_HEIGHT: f32 = 1.75;
-const PIECES_RADIUS: f32 = 0.25;
+const PIECES_RADIUS: f32 = 0.20;
 const PIECES_OFFSET: Vec3 = Vec3::new(0.0, SPAWN_HEIGHT + 0.66 * PIECES_HEIGHT, 0.0);
 const PIECES_TRANSFORM: Vec3 = Vec3::new(0.2, 0.2, 0.2);
 const PIECES_WEIGHT_CENTER: Vec3 = Vec3::new(0.0, 0.2 * PIECES_HEIGHT, 0.0);

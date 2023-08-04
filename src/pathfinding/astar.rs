@@ -389,12 +389,20 @@ fn find_end_pos(
                 .is_none()
         }) // 2) niet in locations.to
         .filter(|pos| boardstate.chess[pos].is_none()) // 3) waar geen stuk staat
+        .chain(Chess::border_positions())
         .min_by(|a, b| {
             a.distance(start_pos)
                 .partial_cmp(&b.distance(start_pos))
                 .unwrap()
         }) // 4) laagste value voor .distance()
         .unwrap();
+
+
+    // let end_pos_border = Chess::border_positions().min_by(|a, b| {
+    //     a.distance(start_pos)
+    //         .partial_cmp(&b.distance(start_pos))
+    //         .unwrap()
+    // })
     // hier vergelijk ik de distance van a tot de start_pos en de distance van b tot de start pos.
     // cmp returnt ordering::greater als de a.distance(start_pos) groter is dan b.distance(start_pos).
     // Hij vergelijkt dit voor alle mogelijke posities.

@@ -460,6 +460,14 @@ impl Chess {
         (start..=end).flat_map(|x| (-1..=8).map(move |y| Pos::new(x, y)))
     }
 
+    pub fn border_positions() -> impl Iterator<Item = Pos> {
+        let x_vec : [isize;2] = [-1,8];
+        let y_vec : [isize;2] = [-1,8];
+        (x_vec).into_iter().flat_map(|x| (-1..=8).map(move |y| Pos::new(x, y)))
+        .chain((y_vec).into_iter().flat_map(|y| (-1..=8).map(move |x| Pos::new(x, y))))
+
+    }
+
     /// Returns an iterator over all pieces on the board.
     fn pieces(&self) -> impl Iterator<Item = (Pos, Piece)> + '_ {
         Self::board_positions().filter_map(|pos| self[pos].map(|piece| (pos, piece)))
