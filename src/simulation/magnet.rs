@@ -43,7 +43,6 @@ fn signaler(
     mut magnet_update: EventWriter<MagnetEvent>,
     mut magnet_status: ResMut<MagnetStatus>,
     destination: Res<Destination>,
-    player_turn: ResMut<PlayerTurn>,
 ) {
     let (magnet_transform, _magnet, _, _) = magnet_query.get_single().unwrap();
     let magnet_direction = Vec3::new(
@@ -52,7 +51,7 @@ fn signaler(
         destination.goal.x() as f32,
     ) - magnet_transform.translation;
 
-    if magnet_direction.length() <= 0.01 && !magnet_status.simulation && player_turn.turn {
+    if magnet_direction.length() <= 0.01 && !magnet_status.simulation {
         println!("Magnet reached destination, event send");
         magnet_status.simulation = true;
         magnet_update.send(MagnetEvent);
@@ -70,17 +69,11 @@ fn signaler(
 fn move_magnet(
     time: Res<Time>,
     mut magnet_query: Query<(&mut Transform, &mut Magnet, Without<Bar>, Without<Carrier>)>,
-    destination: Res<Destination>
+    destination: Res<Destination>,
 ) {
     let (mut magnet_transform, mut magnet, _, _) = magnet_query.get_single_mut().unwrap();
     let magnet_direction = Vec3::new(magnet.target_pos.y, MAGNET_Y, magnet.target_pos.x)
         - magnet_transform.translation;
-    // Move magnet towards goal when magnet isn't there yet.
-    // let speed:f32 = 1.0;
-    // if !magnet_status.on{
-    //     speed = 3.0;
-    // }
-
     if magnet_direction.length() > 0.01 {
         magnet_transform.translation += magnet_direction.normalize() * time.delta_seconds();
     } else {

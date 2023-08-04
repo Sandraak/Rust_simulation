@@ -1,4 +1,3 @@
-use bevy::prelude::{App, EventReader, EventWriter, Plugin, Res, ResMut};
 use crate::{
     chess::{
         chess::{Chess, Move},
@@ -7,6 +6,7 @@ use crate::{
     },
     controller::controller::*,
 };
+use bevy::prelude::{App, EventReader, EventWriter, Plugin, Res, ResMut};
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
 struct Node {

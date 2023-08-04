@@ -1,6 +1,6 @@
-use super::controller::{self, CurrentMove, MoveEvent, PlayerTurn};
+use super::controller::{self, CurrentMove, MoveEvent, Player, PlayerTurn};
 use crate::{
-    chess::{chess::Move, pos::Pos},
+    chess::{chess::Color, chess::Move, pos::Pos, BoardState},
     simulation::{board::Square, pieces::PieceComponent},
 };
 use bevy::prelude::*;
@@ -33,10 +33,11 @@ fn perform_move(
     mut pieces_query: Query<(&mut PieceComponent, Entity)>,
     mut new_move: EventWriter<MoveEvent>,
     mut current_move: ResMut<CurrentMove>,
+    boardstate: Res<BoardState>,
     player_turn: Res<PlayerTurn>,
     // mut magnet_query: Query<&mut Magnet>,
 ) {
-    if !player_turn.turn {
+    if player_turn.turn == Player::Human {
         if !mouse_button_inputs.just_pressed(MouseButton::Left) {
             return;
         }
@@ -48,11 +49,16 @@ fn perform_move(
                         piece.0.target_x as u8 == square.x && piece.0.target_y as u8 == square.y
                     });
                     if optional_piece.is_some() {
-                        // Add the identifier of the piece entity to selected_piece. This identifier is later used to query the location of the selected piece.
-                        selected_piece.selected = Some(optional_piece.unwrap().1);
-                        info!("selected piece: {:?}", optional_piece);
-                        //return so that the selected square won't be the same as the square the selected piece is on.
-                        return;
+                        if optional_piece
+                            .filter(|piece| piece.0.piece.color == player_turn.color)
+                            .is_some()
+                        {
+                            // Add the identifier of the piece entity to selected_piece. This identifier is later used to query the location of the selected piece.
+                            selected_piece.selected = Some(optional_piece.unwrap().1);
+                            info!("selected piece: {:?}", optional_piece);
+                            //return so that the selected square won't be the same as the square the selected piece is on.
+                            return;
+                        }
                     }
                 }
             }
@@ -65,6 +71,28 @@ fn perform_move(
                     info!("selected square: {:?}", selected_square.selected);
                 }
             }
+
+            //     if boardstate.chess[Pos {
+            //         x: square.x as isize,
+            //         y: square.y as isize,
+            //     }]
+            //     .is_some()
+            //     {
+            //         if boardstate.chess[Pos {
+            //             x: square.x as isize,
+            //             y: square.y as isize,
+            //         }].unwrap().color != player_turn.color
+            //         {
+            //             selected_square.selected = Some(*square);
+            //             info!("selected square: {:?}", selected_square.selected);
+            //         }
+            //     }
+            //     else{
+            //         selected_square.selected = Some(*square);
+            //         info!("selected square: {:?}", selected_square.selected);
+            //     }
+            // }
+            // }
         }
         // Move the selected piece to the selected square.
         if selected_piece.selected.is_some() && selected_square.selected.is_some() {

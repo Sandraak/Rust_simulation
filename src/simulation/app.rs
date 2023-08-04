@@ -6,7 +6,7 @@ use bevy_rapier3d::{
 };
 
 use crate::{
-    chess::*,
+    chess::{computer::ChessComputerPlugin, *},
     controller::{controller::ControllerPlugin, ui::UserInterfacePlugin},
     pathfinding::astar::PathfindingPlugin,
     simulation::board::*,
@@ -30,7 +30,7 @@ pub fn create_app(screen_width: f32, screen_height: f32) -> App {
             ..default()
         }))
         .insert_resource(RapierConfiguration {
-            gravity: Vec3::new(0.0, -90.81, 0.0),
+            gravity: Vec3::new(0.0, -98.1, 0.0),
             ..default()
         })
         .insert_resource(camera::PrimaryWindowResolution { resolution })
@@ -47,6 +47,7 @@ pub fn create_app(screen_width: f32, screen_height: f32) -> App {
         .add_plugin(PiecesPlugin)
         .add_plugin(FramePlugin)
         .add_plugin(UserInterfacePlugin)
+        .add_plugin(ChessComputerPlugin)
         .add_plugin(CameraPlugin);
 
     #[cfg(debug_assertions)]

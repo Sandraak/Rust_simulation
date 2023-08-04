@@ -1,5 +1,7 @@
+use std::ops::Not;
+
 use crate::{
-    chess::{chess::Move, pos::Pos, BoardState},
+    chess::{chess::Color, chess::Move, computer::return_move, pos::Pos, BoardState},
     pathfinding::astar::Path,
 };
 use bevy::prelude::*;
@@ -12,6 +14,7 @@ impl Plugin for ControllerPlugin {
             .init_resource::<CurrentLocations>()
             .init_resource::<MagnetStatus>()
             .init_resource::<PlayerTurn>()
+            .init_resource::<Setup>()
             .insert_resource(Destination {
                 goal: Pos { x: 0, y: 0 },
             })
@@ -27,6 +30,7 @@ impl Plugin for ControllerPlugin {
             .add_event::<FirstMoveEvent>()
             .add_event::<MagnetEvent>()
             .add_event::<EndTurnEvent>()
+            .add_event::<ComputerTurnEvent>()
             .add_system(update_path)
             .add_system(update_locations)
             .add_system(update_current_pos)
@@ -37,8 +41,39 @@ impl Plugin for ControllerPlugin {
 
 #[derive(Resource, Default)]
 pub struct PlayerTurn {
-    pub turn: bool,
+    pub color: Color,
+    pub turn: Player,
 }
+
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]
+pub enum Player {
+    #[default]
+    Human,
+    Computer,
+}
+
+impl Not for Player {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Player::Human => Player::Computer,
+            Player::Computer => Player::Human,
+        }
+    }
+}
+
+// impl Default for PlayerTurn {
+//     fn default() -> Self {
+//         Self { turn: true }
+//     }
+// }
+
+#[derive(Resource, Default, Debug)]
+pub struct Setup {
+    pub complete: bool,
+}
+
 #[derive(Resource, Default, Debug)]
 pub struct CurrentPaths {
     pub paths: Vec<Path>,
@@ -80,8 +115,7 @@ pub struct PathEvent;
 pub struct FirstMoveEvent;
 pub struct MagnetEvent;
 pub struct EndTurnEvent;
-
-fn setup() {}
+pub struct ComputerTurnEvent;
 
 /// Wanneer de CurrentMove resource verandert, stuurt de chess computer een MoveEvent dat dit is gebeurd.
 /// update_path reageert op dit event door een PathEvent te sturen
@@ -142,7 +176,7 @@ fn set_first_pos(
     mut current_locations: ResMut<CurrentLocations>,
     mut new_pos: ResMut<Destination>,
     mut new_path: EventWriter<NewPathEvent>,
-    mut player_turn: ResMut<PlayerTurn>,
+    // mut player_turn: ResMut<PlayerTurn>,
 ) {
     for _event in first_move.iter() {
         println!("set_first_pos");
@@ -153,7 +187,7 @@ fn set_first_pos(
             &mut new_path,
             false,
         );
-        player_turn.turn = true;
+        // player_turn.turn = true;
     }
 }
 
@@ -187,21 +221,31 @@ fn update_pos(
 /// update the boardstate
 fn end_turn(
     mut end_turn: EventReader<EndTurnEvent>,
+    mut computer_turn: EventWriter<ComputerTurnEvent>,
     mut current_locations: ResMut<CurrentPaths>,
     mut magnet_status: ResMut<MagnetStatus>,
     mut player_turn: ResMut<PlayerTurn>,
     mut boardstate: ResMut<BoardState>,
     current_move: Res<CurrentMove>,
+    mut setup: ResMut<Setup>,
 ) {
     for _event in end_turn.iter() {
-        *current_locations = CurrentPaths { paths: vec![] };
-        // magnet_status.simulation = false;
-        // magnet_status.real = false;
-        magnet_status.on = false;
-        player_turn.turn = false;
-        let m = current_move.current_move;
-        boardstate.chess.perform(m);
-
+        if setup.complete {
+            *current_locations = CurrentPaths { paths: vec![] };
+            // magnet_status.simulation = false;
+            // magnet_status.real = false;
+            magnet_status.on = false;
+            // player_turn.turn = false;
+            let m = current_move.current_move;
+            boardstate.chess.perform(m);
+            player_turn.turn = !player_turn.turn;
+            if player_turn.turn == Player::Computer {
+                computer_turn.send(ComputerTurnEvent);
+                // return_move(boardstate, player_turn, current_move);
+            }
+        } else {
+            setup.complete = true;
+        }
     }
 }
 
