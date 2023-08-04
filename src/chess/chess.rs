@@ -4,6 +4,54 @@ use std::ops::{Index, IndexMut, Not};
 
 use super::pos::*;
 
+const DEFAULT_BOARD: [[std::option::Option<Piece>; 8]; 8] =  [
+    [
+        Some(Piece::WHITE_ROOK),
+        Some(Piece::WHITE_KNIGHT),
+        Some(Piece::WHITE_BISHOP),
+        Some(Piece::WHITE_QUEEN),
+        Some(Piece::WHITE_KING),
+        Some(Piece::WHITE_BISHOP),
+        Some(Piece::WHITE_KNIGHT),
+        Some(Piece::WHITE_ROOK),
+    ],
+    [
+        Some(Piece::WHITE_PAWN),
+        Some(Piece::WHITE_PAWN),
+        Some(Piece::WHITE_PAWN),
+        Some(Piece::WHITE_PAWN),
+        Some(Piece::WHITE_PAWN),
+        Some(Piece::WHITE_PAWN),
+        Some(Piece::WHITE_PAWN),
+        Some(Piece::WHITE_PAWN),
+    ],
+    [None, None, None, None, None, None, None, None],
+    [None, None, None, None, None, None, None, None],
+    [None, None, None, None, None, None, None, None],
+    [None, None, None, None, None, None, None, None],
+    [
+        Some(Piece::BLACK_PAWN),
+        Some(Piece::BLACK_PAWN),
+        Some(Piece::BLACK_PAWN),
+        Some(Piece::BLACK_PAWN),
+        Some(Piece::BLACK_PAWN),
+        Some(Piece::BLACK_PAWN),
+        Some(Piece::BLACK_PAWN),
+        Some(Piece::BLACK_PAWN),
+    ],
+    [
+        Some(Piece::BLACK_ROOK),
+        Some(Piece::BLACK_KNIGHT),
+        Some(Piece::BLACK_BISHOP),
+        Some(Piece::BLACK_QUEEN),
+        Some(Piece::BLACK_KING),
+        Some(Piece::BLACK_BISHOP),
+        Some(Piece::BLACK_KNIGHT),
+        Some(Piece::BLACK_ROOK),
+    ],
+];
+
+
 const TEST_BOARD_1: [[std::option::Option<Piece>; 8]; 8] =  [
     [
         Some(Piece::WHITE_ROOK),
@@ -150,7 +198,7 @@ pub struct Chess {
 ///Board staat nu verkeerd om, ff omdraaien.
 impl Chess {
     pub fn new() -> Self {
-        let board = TEST_BOARD_1;
+        let board = DEFAULT_BOARD;
         // [
         //     [
         //         Some(Piece::WHITE_ROOK),
@@ -242,6 +290,13 @@ impl Chess {
     // fn pieces(&self) -> impl Iterator<Item = (Pos, Piece)> + '_ {
     //     Self::board_positions().filter_map(|pos| self[pos].map(|piece| (pos, piece)))
     // }
+    pub fn perform(&mut self, m: Move) {
+        if self[m.from].unwrap().kind == Kind::King {
+            self.kings[self.turn.king_index()] = m.to;
+        }
+        self[m.to] = self[m.from].take();
+        self.turn = !self.turn;
+    }
 }
 
 impl Default for Chess {
@@ -275,6 +330,7 @@ where
     }
 }
 
+
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Piece {
     pub color: Color,
@@ -306,6 +362,14 @@ pub enum Color {
     Black,
     #[default]
     White,
+}
+impl Color{
+    fn king_index(&self) -> usize {
+        match self {
+            Color::Black => 1,
+            Color::White => 0,
+        }
+    }
 }
 
 impl Not for Color {

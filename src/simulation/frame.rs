@@ -54,7 +54,7 @@ impl FromWorld for FrameColors {
             ..default()
         });
         let bar = materials.add(StandardMaterial {
-            base_color: Color::rgb(0.5, 0.5, 0.5),
+            base_color: Color::rgb(0.2, 0.2, 1.0),
             metallic: 1.0,
             ..default()
         });
@@ -114,7 +114,7 @@ fn create_carrier(
         min_x: -1.75,
         max_x: -0.75,
         min_y: -1.0,
-        max_y: -0.75,
+        max_y: -0.45,
         min_z: -1.75,
         max_z: -0.75,
     }));
@@ -169,32 +169,32 @@ fn create_frame(commands: Commands, meshes: ResMut<Assets<Mesh>>, colors: Res<Fr
             max_x: -2.0,
             min_y: -1.25,
             max_y: -0.25,
-            min_z: 9.0,
-            max_z: 9.5,
+            min_z: 10.0,
+            max_z: 10.5,
         },
         Box {
             min_x: -2.5,
             max_x: -2.0,
             min_y: -1.25,
             max_y: -0.25,
-            min_z: -2.5,
-            max_z: -2.0,
+            min_z: -3.5,
+            max_z: -3.0,
         },
         Box {
             min_x: 9.5,
             max_x: 9.0,
             min_y: -1.25,
             max_y: -0.25,
-            min_z: -2.5,
-            max_z: -2.0,
+            min_z: -3.5,
+            max_z: -3.0,
         },
         Box {
             min_x: 9.5,
             max_x: 9.0,
             min_y: -1.25,
             max_y: -0.25,
-            min_z: 9.5,
-            max_z: 9.0,
+            min_z: 10.5,
+            max_z: 10.0,
         },
     ];
     create_part_of_frame(commands, meshes, colors, frame_shapes);

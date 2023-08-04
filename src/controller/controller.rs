@@ -1,5 +1,5 @@
 use crate::{
-    chess::{chess::Move, pos::Pos},
+    chess::{chess::Move, pos::Pos, BoardState},
     pathfinding::astar::Path,
 };
 use bevy::prelude::*;
@@ -190,6 +190,8 @@ fn end_turn(
     mut current_locations: ResMut<CurrentPaths>,
     mut magnet_status: ResMut<MagnetStatus>,
     mut player_turn: ResMut<PlayerTurn>,
+    mut boardstate: ResMut<BoardState>,
+    current_move: Res<CurrentMove>,
 ) {
     for _event in end_turn.iter() {
         *current_locations = CurrentPaths { paths: vec![] };
@@ -197,6 +199,9 @@ fn end_turn(
         // magnet_status.real = false;
         magnet_status.on = false;
         player_turn.turn = false;
+        let m = current_move.current_move;
+        boardstate.chess.perform(m);
+
     }
 }
 

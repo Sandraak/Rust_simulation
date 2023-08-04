@@ -140,8 +140,8 @@ fn create_border(
     colors: Res<BoardColors>,
 ) {
     let mesh = meshes.add(Mesh::from(shape::Box {
-        min_x: -3.5,
-        max_x: 10.5,
+        min_x: -2.5,
+        max_x: 9.5,
         min_y: -0.25,
         max_y: -SMALL_FLOAT,
         min_z: -3.5,
