@@ -30,9 +30,9 @@ fn move_bar_and_carrier(
     let (mut carrier_transform, _, _, _) = carrier_query.get_single_mut().unwrap();
     let (magnet_transform, _, _, _) = magnet_query.get_single().unwrap();
 
-    bar_transform.translation.x = magnet_transform.translation.x + 1.25;
-    carrier_transform.translation.x = magnet_transform.translation.x + 1.25;
+    bar_transform.translation.z = magnet_transform.translation.z + 1.25;
     carrier_transform.translation.z = magnet_transform.translation.z + 1.25;
+    carrier_transform.translation.x = magnet_transform.translation.x + 1.25;
 }
 
 #[derive(Resource)]
@@ -86,12 +86,12 @@ fn create_moving_bar(
     colors: Res<FrameColors>,
 ) {
     let mesh = meshes.add(Mesh::from(shape::Box {
-        min_x: -1.5,
-        max_x: -1.0,
+        min_x: -2.5,
+        max_x: 9.5,
         min_y: -1.25,
         max_y: -1.0,
-        min_z: -3.5,
-        max_z: 10.5,
+        min_z: -1.5,
+        max_z: -1.0,
     }));
     commands
         .spawn(PbrBundle {
