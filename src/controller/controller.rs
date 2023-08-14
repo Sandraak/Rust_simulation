@@ -63,11 +63,6 @@ impl Not for Player {
     }
 }
 
-// impl Default for PlayerTurn {
-//     fn default() -> Self {
-//         Self { turn: true }
-//     }
-// }
 
 #[derive(Resource, Default, Debug)]
 pub struct Setup {
@@ -158,7 +153,8 @@ fn update_current_pos(
     mut new_path: EventWriter<NewPathEvent>,
 ) {
     for _event in magnet_update.iter() {
-        if magnet_status.simulation && magnet_status.real {
+        if magnet_status.simulation && magnet_status.real
+        {
             update_pos(
                 &mut magnet_status,
                 &mut current_locations,
@@ -207,6 +203,8 @@ fn update_pos(
         current_locations.locations.positions.remove(0);
         magnet_status.simulation = false;
         // magnet_status.real = false;
+        //TODO
+        // server.send_pos(pos, magnet_on);
         magnet_status.on = magnet_on;
         println!(
             "Set new goal = {:?}, magnet status: {:?}",

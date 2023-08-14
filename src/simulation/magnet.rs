@@ -1,5 +1,5 @@
 use crate::{
-    controller::controller::{Destination, MagnetEvent, MagnetStatus, PlayerTurn},
+    controller::controller::{Destination, MagnetEvent, MagnetStatus},
     simulation::frame::*,
 };
 use bevy::prelude::*;
@@ -56,12 +56,6 @@ fn signaler(
         magnet_status.simulation = true;
         magnet_update.send(MagnetEvent);
     }
-    // else
-    // if magnet_direction.length() <= 0.01 && player_turn.turn{
-    //     println!("biem");
-    //     magnet_status.simulation = true;
-    //     magnet_update.send(MagnetEvent);
-    // }
 }
 
 ///System that constantly checks the distance between the desired and true position of magnet.
