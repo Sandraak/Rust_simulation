@@ -1,8 +1,8 @@
-use bevy::prelude::{EventReader, EventWriter, Plugin, Res, ResMut};
+use bevy::prelude::{EventReader, EventWriter, Plugin, ResMut};
 
 use crate::{
     chess::{chess::Chess, chess::Move},
-    controller::controller::{self, ComputerTurnEvent, CurrentMove, MoveEvent, Player, PlayerTurn},
+    controller::controller::{ComputerTurnEvent, CurrentMove, MoveEvent, Player, PlayerTurn},
 };
 
 use super::{
@@ -30,13 +30,14 @@ pub fn return_move(
     mut current_move: ResMut<CurrentMove>,
 ) {
     for _event in computer_turn.iter() {
+        println!("computer turn event received");
         if player_turn.turn == Player::Computer {
             let chess = boardstate.chess;
             let best_move = minimax(&chess, 4, i16::MIN, i16::MAX);
             if best_move.m.is_some() {
                 current_move.current_move = best_move.m.unwrap();
                 new_move.send(MoveEvent);
-                println!("move event send: Move : {:?}", current_move.current_move);
+                // println!("move event send: Move : {:?}", current_move.current_move);
             } else {
                 match chess.outcome().unwrap() {
                     Outcome::Winner(color) => println!("{color} wins!"),

@@ -1,15 +1,15 @@
-use std::{env, ops::Not};
-use std::future::Future;
+use std::ops::Not;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::{
     chess::{chess::Color, chess::Move, pos::Pos, BoardState},
     pathfinding::astar::Path,
 };
 use bevy::prelude::*;
-use std::str::FromStr;
-use std::task::Poll;
-use reqwest::Response;
 
+static POLLING_DONE: AtomicBool = AtomicBool::new(false);
+
+/// env var URL: export URL=http://192.168.1.22
 pub struct ControllerPlugin;
 
 impl Plugin for ControllerPlugin {
@@ -19,7 +19,7 @@ impl Plugin for ControllerPlugin {
             .init_resource::<MagnetStatus>()
             .init_resource::<PlayerTurn>()
             .init_resource::<Setup>()
-            .init_resource::<PollFutureResource>()
+            // .init_resource::<PollFutureResource>()
             .insert_resource(Destination {
                 goal: Pos { x: 0, y: 0 },
             })
@@ -40,7 +40,7 @@ impl Plugin for ControllerPlugin {
             .add_system(update_locations)
             .add_system(update_current_pos)
             .add_system(set_first_pos)
-            .add_system(poll)
+            .add_system(poll_system)
             .add_system(end_turn);
     }
 }
@@ -95,6 +95,7 @@ pub struct CurrentMove {
 
 #[derive(Resource)]
 pub struct MagnetStatus {
+    pub moving: bool,
     pub simulation: bool,
     pub real: bool,
     pub on: bool,
@@ -103,6 +104,7 @@ pub struct MagnetStatus {
 impl Default for MagnetStatus {
     fn default() -> Self {
         Self {
+            moving: false,
             simulation: false,
             real: true, //needs setup
             on: false,
@@ -117,55 +119,25 @@ pub struct MagnetEvent;
 pub struct EndTurnEvent;
 pub struct ComputerTurnEvent;
 
-#[derive(Default, Resource)]
-struct PollFutureResource(PollFutureState);
-
-#[derive(Default)]
-enum PollFutureState {
-    NotStarted,
-    AwaitGet(Box<dyn Future<Output = reqwest::Result<Response>>>),
-    AwaitText(Box<dyn Future<Output = reqwest::Result<String>>>),
-}
-
-fn poll(
-    mut poll_state: ResMut<PollFutureState>,
+fn poll_system(
     mut magnet_status: ResMut<MagnetStatus>,
-    mut magnet_update: EventWriter<MagnetEvent>,
+    mut magnet_event: EventWriter<MagnetEvent>,
 ) {
-    // Manually "await" futures
-    match &*poll_state {
-        PollFutureState::NotStarted => {
-            let poll_url = format!("{}/poll", env::var("URL").expect("URL not set"));
-            let future = reqwest::get(&poll_url);
-            *poll_state = PollFutureState::AwaitGet(Box::new(future));
-        }
-        PollFutureState::AwaitGet(future) => {
-            match future.poll() {
-                Poll::Ready(output) => {
-                    let future = output.unwrap().text();
-                    *poll_state = PollFutureState::AwaitText(Box::new(future))
-                }
-                Poll::Pending => {
-                    // Wait for the next call of poll
-                }
-            }
-        }
-        PollFutureState::AwaitText(future) => {
-            match future.poll() {
-                Poll::Ready(output) => {
-                    let resp = output.unwrap();
-                    if bool::from_str(&resp).unwrap() {
-                        magnet_status.real = true;
-                        magnet_update.send(MagnetEvent);
-                    };
-                    *poll_state = PollFutureState::NotStarted;
-                }
-                Poll::Pending => {
-                    // Wait for the next call of poll
-                }
-            }
+    if magnet_status.moving {
+        poll();
+        if POLLING_DONE.load(Ordering::Relaxed) {
+            magnet_status.real = true;
+            magnet_status.moving = false;
+            magnet_event.send(MagnetEvent);
         }
     }
+}
+
+fn poll() {
+    let request = ehttp::Request::get("http://192.168.1.22/poll");
+    ehttp::fetch(request, move |_result: ehttp::Result<ehttp::Response>| {
+        POLLING_DONE.store(true, Ordering::Relaxed);
+    });
 }
 
 /// Wanneer de CurrentMove resource verandert, stuurt de chess computer een MoveEvent dat dit is gebeurd.
@@ -186,6 +158,7 @@ fn update_locations(
     mut end_turn: EventWriter<EndTurnEvent>,
 ) {
     for _event in path_update.iter() {
+        println!("update locations");
         if current_paths.paths.is_empty() {
             println!("end turn event");
             end_turn.send(EndTurnEvent);
@@ -252,26 +225,25 @@ fn update_pos(
     if current_locations.locations.positions.is_empty() {
         println!("new path event");
         new_path.send(NewPathEvent);
+        println!("new path event send");
     } else {
         let goal = *current_locations.locations.positions.first().unwrap();
         **new_pos = Destination { goal };
         current_locations.locations.positions.remove(0);
         magnet_status.simulation = false;
-        // magnet_status.real = false;
+        magnet_status.real = false;
         magnet_status.on = magnet_on;
-        println!(
-            "Set new goal = {:?}, magnet status: {:?}",
-            goal, magnet_status.on
-        );
+
         let goal_url = format!(
             "{}/{}/{}/{}",
-            env::var("URL").expect("URL not set"),
+            "http://192.168.1.22",
             goal.x(),
             goal.y(),
-            magnet_on
+            magnet_status.on as isize
         );
-        println!("hier nog ok?");
-        reqwest::blocking::get(&goal_url).unwrap();
+        let request = ehttp::Request::get(goal_url);
+        ehttp::fetch(request, move |_result: ehttp::Result<ehttp::Response>| {});
+        magnet_status.moving = true;
     }
 }
 // }
@@ -295,15 +267,17 @@ fn end_turn(
             // magnet_status.simulation = false;
             // magnet_status.real = false;
             magnet_status.on = false;
+            magnet_status.moving = false;
             // player_turn.turn = false;
             let m = current_move.current_move;
             boardstate.chess.perform(m);
             player_turn.turn = !player_turn.turn;
             if player_turn.turn == Player::Computer {
                 computer_turn.send(ComputerTurnEvent);
-                // return_move(boardstate, player_turn, current_move);
+                println!("computer turn event send");
             }
         } else {
+            println!("SETUP COMPLETE");
             setup.complete = true;
         }
     }
