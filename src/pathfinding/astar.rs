@@ -4,7 +4,7 @@ use crate::{
         pos::Pos,
         BoardState,
     },
-    controller::controller::*,
+    controller::controller::{PathEvent, CurrentMove, CurrentPaths, NewPathEvent},
 };
 use bevy::prelude::{App, EventReader, EventWriter, Plugin, Res, ResMut};
 
