@@ -397,7 +397,6 @@ fn find_end_pos(
         }) // 4) laagste value voor .distance()
         .unwrap();
 
-
     // let end_pos_border = Chess::border_positions().min_by(|a, b| {
     //     a.distance(start_pos)
     //         .partial_cmp(&b.distance(start_pos))

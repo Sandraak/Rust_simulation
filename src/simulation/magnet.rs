@@ -30,14 +30,11 @@ pub struct Magnet {
 }
 
 /// Systeem dat de nextPositon opvraagt
-
 // #[derive(Resource)]
 // struct NextPosition {
 //     destination: Pos,
 // }
-
-/// event writer
-///
+// event writer
 fn signaler(
     magnet_query: Query<(&Transform, &Magnet, Without<Bar>, Without<Carrier>)>,
     mut magnet_update: EventWriter<MagnetEvent>,

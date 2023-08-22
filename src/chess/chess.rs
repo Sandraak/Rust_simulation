@@ -461,11 +461,16 @@ impl Chess {
     }
 
     pub fn border_positions() -> impl Iterator<Item = Pos> {
-        let x_vec : [isize;2] = [-1,8];
-        let y_vec : [isize;2] = [-1,8];
-        (x_vec).into_iter().flat_map(|x| (-1..=8).map(move |y| Pos::new(x, y)))
-        .chain((y_vec).into_iter().flat_map(|y| (-1..=8).map(move |x| Pos::new(x, y))))
-
+        let x_vec: [isize; 2] = [-1, 8];
+        let y_vec: [isize; 2] = [-1, 8];
+        (x_vec)
+            .into_iter()
+            .flat_map(|x| (-1..=8).map(move |y| Pos::new(x, y)))
+            .chain(
+                (y_vec)
+                    .into_iter()
+                    .flat_map(|y| (-1..=8).map(move |x| Pos::new(x, y))),
+            )
     }
 
     /// Returns an iterator over all pieces on the board.

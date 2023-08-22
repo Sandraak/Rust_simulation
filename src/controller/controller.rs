@@ -1,10 +1,11 @@
-use std::ops::Not;
+use std::{env, ops::Not};
 
 use crate::{
-    chess::{chess::Color, chess::Move, computer::return_move, pos::Pos, BoardState},
+    chess::{chess::Color, chess::Move, pos::Pos, BoardState},
     pathfinding::astar::Path,
 };
 use bevy::prelude::*;
+use std::str::FromStr;
 
 pub struct ControllerPlugin;
 
@@ -35,6 +36,7 @@ impl Plugin for ControllerPlugin {
             .add_system(update_locations)
             .add_system(update_current_pos)
             .add_system(set_first_pos)
+            // .add_system(poll)
             .add_system(end_turn);
     }
 }
@@ -62,7 +64,6 @@ impl Not for Player {
         }
     }
 }
-
 
 #[derive(Resource, Default, Debug)]
 pub struct Setup {
@@ -112,6 +113,21 @@ pub struct MagnetEvent;
 pub struct EndTurnEvent;
 pub struct ComputerTurnEvent;
 
+fn poll(
+    mut magnet_status: ResMut<MagnetStatus>,
+    mut magnet_update: EventWriter<MagnetEvent>,
+    mut path_update: EventReader<NewPathEvent>,
+) {
+    // for _event in path_update.iter() {
+        let poll_url = format!("{}/poll", env::var("URL").expect("URL not set"));
+        let resp = reqwest::blocking::get(&poll_url).unwrap().text().unwrap();
+        if bool::from_str(&resp).unwrap() {
+            magnet_status.real = true;
+            magnet_update.send(MagnetEvent);
+        }
+    // }
+}
+
 /// Wanneer de CurrentMove resource verandert, stuurt de chess computer een MoveEvent dat dit is gebeurd.
 /// update_path reageert op dit event door een PathEvent te sturen
 /// De functie give_path in het Pathfinding component luistert naar dit event en update de CurrentLocations resource.
@@ -153,8 +169,7 @@ fn update_current_pos(
     mut new_path: EventWriter<NewPathEvent>,
 ) {
     for _event in magnet_update.iter() {
-        if magnet_status.simulation && magnet_status.real
-        {
+        if magnet_status.simulation && magnet_status.real {
             update_pos(
                 &mut magnet_status,
                 &mut current_locations,
@@ -203,13 +218,20 @@ fn update_pos(
         current_locations.locations.positions.remove(0);
         magnet_status.simulation = false;
         // magnet_status.real = false;
-        //TODO
-        // server.send_pos(pos, magnet_on);
         magnet_status.on = magnet_on;
         println!(
             "Set new goal = {:?}, magnet status: {:?}",
             goal, magnet_status.on
         );
+        let goal_url = format!(
+            "{}/{}/{}/{}",
+            env::var("URL").expect("URL not set"),
+            goal.x(),
+            goal.y(),
+            magnet_on
+        );
+        println!("hier nog ok?");
+        reqwest::blocking::get(&goal_url).unwrap();
     }
 }
 // }
