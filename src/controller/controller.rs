@@ -1,4 +1,5 @@
 use std::{env, ops::Not};
+use std::future::Future;
 
 use crate::{
     chess::{chess::Color, chess::Move, pos::Pos, BoardState},
@@ -6,6 +7,8 @@ use crate::{
 };
 use bevy::prelude::*;
 use std::str::FromStr;
+use std::task::Poll;
+use reqwest::Response;
 
 pub struct ControllerPlugin;
 
@@ -16,6 +19,7 @@ impl Plugin for ControllerPlugin {
             .init_resource::<MagnetStatus>()
             .init_resource::<PlayerTurn>()
             .init_resource::<Setup>()
+            .init_resource::<PollFutureResource>()
             .insert_resource(Destination {
                 goal: Pos { x: 0, y: 0 },
             })
@@ -36,7 +40,7 @@ impl Plugin for ControllerPlugin {
             .add_system(update_locations)
             .add_system(update_current_pos)
             .add_system(set_first_pos)
-            // .add_system(poll)
+            .add_system(poll)
             .add_system(end_turn);
     }
 }
@@ -113,19 +117,55 @@ pub struct MagnetEvent;
 pub struct EndTurnEvent;
 pub struct ComputerTurnEvent;
 
+#[derive(Default, Resource)]
+struct PollFutureResource(PollFutureState);
+
+#[derive(Default)]
+enum PollFutureState {
+    NotStarted,
+    AwaitGet(Box<dyn Future<Output = reqwest::Result<Response>>>),
+    AwaitText(Box<dyn Future<Output = reqwest::Result<String>>>),
+}
+
 fn poll(
+    mut poll_state: ResMut<PollFutureState>,
     mut magnet_status: ResMut<MagnetStatus>,
     mut magnet_update: EventWriter<MagnetEvent>,
-    mut path_update: EventReader<NewPathEvent>,
 ) {
-    // for _event in path_update.iter() {
-        let poll_url = format!("{}/poll", env::var("URL").expect("URL not set"));
-        let resp = reqwest::blocking::get(&poll_url).unwrap().text().unwrap();
-        if bool::from_str(&resp).unwrap() {
-            magnet_status.real = true;
-            magnet_update.send(MagnetEvent);
+    // Manually "await" futures
+    match &*poll_state {
+        PollFutureState::NotStarted => {
+            let poll_url = format!("{}/poll", env::var("URL").expect("URL not set"));
+            let future = reqwest::get(&poll_url);
+            *poll_state = PollFutureState::AwaitGet(Box::new(future));
         }
-    // }
+        PollFutureState::AwaitGet(future) => {
+            match future.poll() {
+                Poll::Ready(output) => {
+                    let future = output.unwrap().text();
+                    *poll_state = PollFutureState::AwaitText(Box::new(future))
+                }
+                Poll::Pending => {
+                    // Wait for the next call of poll
+                }
+            }
+        }
+        PollFutureState::AwaitText(future) => {
+            match future.poll() {
+                Poll::Ready(output) => {
+                    let resp = output.unwrap();
+                    if bool::from_str(&resp).unwrap() {
+                        magnet_status.real = true;
+                        magnet_update.send(MagnetEvent);
+                    };
+                    *poll_state = PollFutureState::NotStarted;
+                }
+                Poll::Pending => {
+                    // Wait for the next call of poll
+                }
+            }
+        }
+    }
 }
 
 /// Wanneer de CurrentMove resource verandert, stuurt de chess computer een MoveEvent dat dit is gebeurd.
