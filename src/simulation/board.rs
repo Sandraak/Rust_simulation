@@ -13,6 +13,8 @@ const BOARD_OFFSET: Vec3 = Vec3::new(
     -0.5 * BOARD_HEIGHT,
     0.5 * BOARD_LENGTH - 2.5,
 );
+
+//Plugin for creating the board and lighting up the squares
 pub struct BoardPlugin;
 
 impl Plugin for BoardPlugin {
@@ -62,12 +64,14 @@ impl FromWorld for BoardColors {
     }
 }
 
+
+/// Square on the chessboard
 #[derive(Component, Copy, Clone, Debug)]
 pub struct Square {
     pub x: u8,
     pub y: u8,
 }
-
+/// returns whether a given square is white.
 fn is_white(x: u8, y: u8) -> bool {
     (x + y + 1) % 2 == 0
 }

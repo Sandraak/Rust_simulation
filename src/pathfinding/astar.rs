@@ -8,6 +8,7 @@ use crate::{
 };
 use bevy::prelude::{App, EventReader, EventWriter, Plugin, Res, ResMut};
 
+/// Node used for the A* algorithm
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
 struct Node {
     pos: Pos,
@@ -21,7 +22,7 @@ impl Node {
         self.distance_to_start + self.distance_to_end
     }
 }
-///All the positions and crossed pieces in separate vectors
+///All the paths and crossed pieces in separate vectors
 #[derive(Debug, Clone, PartialEq, Default)]
 struct PathInformation {
     path: Path,
@@ -51,6 +52,7 @@ impl IntoIterator for Path {
     }
 }
 
+/// Plugin for running the systems needed by the bevy app.
 pub struct PathfindingPlugin;
 
 impl Plugin for PathfindingPlugin {

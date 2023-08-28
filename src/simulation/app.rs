@@ -17,6 +17,8 @@ use crate::{
 
 use super::magnet::MagnetPlugin;
 
+/// Creates the app using all the plugins from other components.
+/// Shows the simulation in a screen of the given size.
 pub fn create_app(screen_width: f32, screen_height: f32) -> App {
     let resolution = WindowResolution::new(screen_width, screen_height);
     let mut app = App::new();

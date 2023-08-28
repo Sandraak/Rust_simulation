@@ -21,7 +21,9 @@ const PIECES_MASS: f32 = 0.2;
 const PIECES_FRICTION: f32 = 1.0;
 const PIECES_RESTITUTION: f32 = 0.0;
 
+/// plugin containing information about creating and moving pieces. This is used by the bevy app.
 pub struct PiecesPlugin;
+
 
 impl Plugin for PiecesPlugin {
     fn build(&self, app: &mut App) {

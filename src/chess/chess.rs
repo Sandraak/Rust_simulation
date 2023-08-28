@@ -26,6 +26,9 @@ impl Graveyard {
     }
 }
 
+
+/// Keeps track of the state of the game, the location of all the pieces(boardstate) is kept in board. Whose turn it is in turn,
+/// the location of both kings in kings. And the state of the graveyards in graveyards.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Chess {
     pub board: [[Option<Piece>; 8]; 8],
@@ -352,6 +355,8 @@ where
         &mut self.board[index.borrow().y() as usize][index.borrow().x() as usize]
     }
 }
+
+///Winner or Stalemate
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Outcome {
     Winner(Color),
@@ -370,6 +375,8 @@ impl Outcome {
     }
 }
 
+
+/// Information about the color and kind of the piece.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Piece {
     pub color: Color,

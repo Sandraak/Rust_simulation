@@ -1,6 +1,8 @@
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
+
+///Position on the chessboard
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Pos {
     pub x: isize,
@@ -81,6 +83,7 @@ impl SubAssign<Shift> for Pos {
     }
 }
 
+/// A position can shift in a certain direction, using [`Shift`].
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Shift {
     dx: isize,

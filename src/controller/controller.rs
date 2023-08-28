@@ -7,7 +7,9 @@ use crate::{
 };
 use bevy::prelude::*;
 
+/// Is true when the hardware magnet has reached it's position
 static POLLING_DONE: AtomicBool = AtomicBool::new(false);
+/// Plugin initilizing the resources and running the systems for the bevy app.
 pub struct ControllerPlugin;
 
 impl Plugin for ControllerPlugin {

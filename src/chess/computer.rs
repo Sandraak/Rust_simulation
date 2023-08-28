@@ -9,10 +9,12 @@ use super::{
     chess::{Color, Outcome},
     BoardState,
 };
+/// Move with the highest score acording to the minimax algorithm.
 pub struct BestMove {
     pub m: Option<Move>,
     score: i16,
 }
+/// Plugin that runs the system for the bevy app.
 pub struct ChessComputerPlugin;
 
 impl Plugin for ChessComputerPlugin {
@@ -24,7 +26,7 @@ impl Plugin for ChessComputerPlugin {
 /// When a new [`ComputerTurnEvent`] is registered this function will generate a new move,
 /// if it's the computer player's turn. When a new move had been found, this move will be 
 /// stored in [`CurrentMove`]
-/// and the function will send a [`MoveEvent`] triggering [`update_path`]
+/// and the function will send a [`MoveEvent`] triggering [`update_path`].
 /// When there are no more moves, the game has ended and 
 /// the outcome will be printed.
 /// 

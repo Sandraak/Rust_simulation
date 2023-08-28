@@ -8,7 +8,9 @@ const BAR_OFFSET: Vec3 = Vec3::new(0.0, BAR_Y, BAR_Z);
 
 const CARRIER_Y: f32 = 0.0;
 const CARRIER_OFFSET: Vec3 = Vec3::new(0.0, CARRIER_Y, 0.0);
+///Plugin for creating and moving parts of the frame, used by the bevy app.
 pub struct FramePlugin;
+
 
 impl Plugin for FramePlugin {
     fn build(&self, app: &mut App) {
@@ -35,6 +37,7 @@ fn move_bar_and_carrier(
     carrier_transform.translation.x = magnet_transform.translation.x + 1.25;
 }
 
+/// Resource containg all the colors used in the frame.
 #[derive(Resource)]
 pub struct FrameColors {
     frame: Handle<StandardMaterial>,
@@ -74,8 +77,11 @@ impl FromWorld for FrameColors {
     }
 }
 
+
+/// Moving bar that carries the carrier
 #[derive(Component, Copy, Clone, Debug)]
 pub struct Bar {}
+/// Moving carrier that carries the magnet
 #[derive(Component, Copy, Clone, Debug)]
 pub struct Carrier {}
 

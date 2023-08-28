@@ -4,7 +4,7 @@ use crate::{
     simulation::{board::Square, pieces::PieceComponent},
 };
 use bevy::prelude::*;
-
+/// Plugin initilizing the resources and running the systems for the bevy app.
 pub struct UserInterfacePlugin;
 
 impl Plugin for UserInterfacePlugin {
@@ -15,11 +15,13 @@ impl Plugin for UserInterfacePlugin {
     }
 }
 
+/// Resource containing the currently selected square.
 #[derive(Default, Resource)]
 struct SelectedSquare {
     selected: Option<Square>,
 }
 
+/// Resource containing the currently selected  piece.
 #[derive(Default, Resource, Debug)]
 struct SelectedPiece {
     selected: Option<Entity>,

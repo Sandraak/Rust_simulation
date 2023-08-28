@@ -13,6 +13,8 @@ const MAGNET_Y: f32 = -BOARD_HEIGHT - 0.3 * MAGNET_HEIGHT;
 const MAGNET_OFFSET: Vec3 = Vec3::new(-2.25, MAGNET_Y, -2.25);
 
 pub const MAGNET_STRENGTH: f32 = 7.5;
+
+/// Plugin containing information about the magnet, this is used by the bevy app.
 pub struct MagnetPlugin;
 
 impl Plugin for MagnetPlugin {
@@ -24,6 +26,7 @@ impl Plugin for MagnetPlugin {
     }
 }
 
+/// The position of the magnet.
 #[derive(Component, Copy, Clone, Debug)]
 pub struct Magnet {
     target_pos: Vec2,
