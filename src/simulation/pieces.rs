@@ -31,7 +31,9 @@ impl Plugin for PiecesPlugin {
 }
 
 /// System that constantly checks the distance between a piece and the magnet.
-/// It then executes a force on the piece towards the magnet based on this distance when the magnet is on.
+/// It then executes a force on the piece towards the magnet,
+/// The strength is based on the distance between the magnet and the piece. A smaller distance
+/// results in a stronger force. The force is only executed when the magnet is on.
 fn move_pieces(
     mut ext_forces: Query<(&mut ExternalForce, &mut Transform, With<PieceComponent>)>,
     magnet_query: Query<(&Transform, &Magnet, Without<PieceComponent>)>,
@@ -77,7 +79,7 @@ fn add_collider(parent: &mut ChildBuilder) {
         .insert(Transform::from_translation(PIECES_OFFSET));
 }
 
-/// Sets the transform such that the pieces face forward.
+/// Sets the transform such that the pieces face towards the center of the board.
 fn set_piece_body_transform(piece: Piece) -> Transform {
     let piece_body_transform: Transform;
     match piece.kind {
@@ -292,7 +294,7 @@ pub fn spawn_pawn(
         .with_children(add_collider);
 }
 
-/// Spawns all the pieces on the location they have in the boardstate.
+/// Spawns all the pieces on the location they have in the [`BoardState`].
 fn create_pieces(
     mut commands: Commands,
     asset_server: Res<AssetServer>,

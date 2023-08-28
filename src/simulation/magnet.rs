@@ -29,12 +29,9 @@ pub struct Magnet {
     target_pos: Vec2,
 }
 
-/// Systeem dat de nextPositon opvraagt
-// #[derive(Resource)]
-// struct NextPosition {
-//     destination: Pos,
-// }
-// event writer
+/// System that checks whether the magnet has reached it's destination.
+/// When this is the case, this function sends a [`MagnetEvent`] which triggers
+/// [`update_current_pos`] in controller.rs
 fn signaler(
     magnet_query: Query<(&Transform, &Magnet, Without<Bar>, Without<Carrier>)>,
     mut magnet_update: EventWriter<MagnetEvent>,
@@ -49,13 +46,12 @@ fn signaler(
     ) - magnet_transform.translation;
 
     if magnet_direction.length() <= 0.01 && !magnet_status.simulation {
-        println!("Magnet reached destination, event send");
         magnet_status.simulation = true;
         magnet_update.send(MagnetEvent);
     }
 }
 
-///System that constantly checks the distance between the desired and true position of magnet.
+/// System that constantly checks the distance between the desired and true position of magnet.
 /// It moves the magnet towards the desired position as long as this distance is larger than 0.01.
 fn move_magnet(
     time: Res<Time>,
@@ -74,6 +70,8 @@ fn move_magnet(
     }
 }
 
+
+/// Creates the magnet, which is a kinematic positition based rigid body.
 fn create_magnet(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,

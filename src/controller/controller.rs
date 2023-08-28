@@ -8,8 +8,6 @@ use crate::{
 use bevy::prelude::*;
 
 static POLLING_DONE: AtomicBool = AtomicBool::new(false);
-
-/// env var URL: export URL=http://192.168.1.22
 pub struct ControllerPlugin;
 
 impl Plugin for ControllerPlugin {
@@ -19,7 +17,6 @@ impl Plugin for ControllerPlugin {
             .init_resource::<MagnetStatus>()
             .init_resource::<PlayerTurn>()
             .init_resource::<Setup>()
-            // .init_resource::<PollFutureResource>()
             .insert_resource(Destination {
                 goal: Pos { x: 0, y: 0 },
             })
@@ -45,12 +42,15 @@ impl Plugin for ControllerPlugin {
     }
 }
 
+///Keeps track of what Color the human player is playing
+/// and who's turn it is.
 #[derive(Resource, Default)]
 pub struct PlayerTurn {
     pub color: Color,
     pub turn: Player,
 }
 
+///The player is either a human or a computer
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Player {
     #[default]
@@ -68,31 +68,38 @@ impl Not for Player {
         }
     }
 }
-
+///Keeps track of whether the setup has been performed.
 #[derive(Resource, Default, Debug)]
 pub struct Setup {
     pub complete: bool,
 }
-
+///Vector with all the paths the magnet still has to cover.
 #[derive(Resource, Default, Debug)]
 pub struct CurrentPaths {
     pub paths: Vec<Path>,
 }
+
+///Vector with all the positions of a certain path the magnet still has to cover.
 #[derive(Resource, Default, Debug)]
 pub struct CurrentLocations {
     pub locations: Path,
 }
 
+///The position to which the magnet is currently moving.
 #[derive(Resource)]
 pub struct Destination {
     pub goal: Pos,
 }
 
+///The current chess move that is being performed
 #[derive(Resource)]
 pub struct CurrentMove {
     pub current_move: Move,
 }
 
+/// This struct keeps track of whether the magnet is currently moving,
+/// whether the magnet hsa reached its destination (simulation and real),
+/// and whether the magnet is currently on.
 #[derive(Resource)]
 pub struct MagnetStatus {
     pub moving: bool,
@@ -106,7 +113,7 @@ impl Default for MagnetStatus {
         Self {
             moving: false,
             simulation: false,
-            real: true, //needs setup
+            real: true,
             on: false,
         }
     }
@@ -119,6 +126,10 @@ pub struct MagnetEvent;
 pub struct EndTurnEvent;
 pub struct ComputerTurnEvent;
 
+/// System that polls to the hardware implementation whether the magnet has yet reached its destination.
+/// It only polls when the magnet is moving.
+/// When POLLING_DONE is true, the magnet in hardware prototype has reached its destination.
+/// When this is the case, this function sends a MagnetEvent to signal that the hardware is ready for a new position.
 fn poll_system(
     mut magnet_status: ResMut<MagnetStatus>,
     mut magnet_event: EventWriter<MagnetEvent>,
@@ -132,7 +143,8 @@ fn poll_system(
         }
     }
 }
-
+/// Sends a HTTP GET request to the server running on the microcontroller.
+/// It stores the response in the atomic bool POLLING_DONE.
 fn poll() {
     let request = ehttp::Request::get("http://192.168.1.22/poll");
     ehttp::fetch(request, move |_result: ehttp::Result<ehttp::Response>| {
@@ -140,16 +152,22 @@ fn poll() {
     });
 }
 
-/// Wanneer de CurrentMove resource verandert, stuurt de chess computer een MoveEvent dat dit is gebeurd.
-/// update_path reageert op dit event door een PathEvent te sturen
-/// De functie give_path in het Pathfinding component luistert naar dit event en update de CurrentLocations resource.
-fn update_path(mut new_move: EventReader<MoveEvent>, mut new_path: EventWriter<PathEvent>) {
+
+/// When a new [`MoveEvent`] is registered this function sends a PathEvent which triggers the function
+/// [`give_path`] in astar.rs.
+/// 
+/// [`give_path`]: crate::pathfinding::astar::give_path
+pub(crate) fn update_path(mut new_move: EventReader<MoveEvent>, mut new_path: EventWriter<PathEvent>) {
     for _event in new_move.iter() {
         new_path.send(PathEvent);
-        println!("PathEvent send");
     }
 }
 
+/// When a new [`NewPathEvent`] is registered, this function checks whether the path vector in [`CurrentPaths`]
+/// is empty. If this is the case, all paths have been executed and an [`EndTurnEvent`] is send, which triggers
+/// [`end_turn`].
+/// When this is not the case, the first path in [`CurrentPaths`] is moved to [`CurrentLocations`], 
+/// and a [`FirstMoveEvent`] is send.
 fn update_locations(
     mut current_paths: ResMut<CurrentPaths>,
     mut current_locations: ResMut<CurrentLocations>,
@@ -158,22 +176,19 @@ fn update_locations(
     mut end_turn: EventWriter<EndTurnEvent>,
 ) {
     for _event in path_update.iter() {
-        println!("update locations");
         if current_paths.paths.is_empty() {
-            println!("end turn event");
             end_turn.send(EndTurnEvent);
         } else {
             current_locations.locations = current_paths.paths.first().unwrap().clone();
             current_paths.paths.remove(0);
             start_move.send(FirstMoveEvent);
-            println!("FirstMove Event Send!");
         }
     }
 }
 
-/// wanneer de locatie bereikt is,
-/// Update de current locatie naar devolgende in de lijst locaties.
-/// Zorg er voor dat de magneten gaan veranderen wanneer deze locatie verandert.
+/// When a new [`MagnetEvent`] is registered, this function checks whether the magnet has
+/// reached its destination in both the simulation and hardware. When this is the case, the function
+/// [`update_pos`] with magnet_on = True is called. 
 fn update_current_pos(
     mut magnet_update: EventReader<MagnetEvent>,
     mut magnet_status: ResMut<MagnetStatus>,
@@ -194,16 +209,18 @@ fn update_current_pos(
     }
 }
 
+/// When a new [`FirstMoveEvent`] is registered, this function checks whether the magnet has
+/// reached its destination in both the simulation and hardware. When this is the case, the function
+/// [`update_pos`] with magnet_on = False is called. The magnet must be off during this move because the 
+/// first position of a path is never part of the intended move, but puts the magnet in place for said move.
 fn set_first_pos(
     mut first_move: EventReader<FirstMoveEvent>,
     mut magnet_status: ResMut<MagnetStatus>,
     mut current_locations: ResMut<CurrentLocations>,
     mut new_pos: ResMut<Destination>,
     mut new_path: EventWriter<NewPathEvent>,
-    // mut player_turn: ResMut<PlayerTurn>,
 ) {
     for _event in first_move.iter() {
-        println!("set_first_pos");
         update_pos(
             &mut magnet_status,
             &mut current_locations,
@@ -211,10 +228,18 @@ fn set_first_pos(
             &mut new_path,
             false,
         );
-        // player_turn.turn = true;
     }
 }
 
+
+/// Updates the next position of the magnet based on the value in [`CurrentLocations`]. When this
+/// vector is empty, there are no moves in the current path and a [`NewPathEvent`] is called, which triggers
+/// [`update_locations`]. When there are still locations, the first Pos of the path vector
+/// in  [`CurrentLocations`] is moved to [`Destination`]. The magnet will move to this position,
+/// so neither the simulation or real magnet has yet reached it,
+/// putting these values to false and magnet_moving to true.
+/// The parameter magnet_on determines whether the magnet is on or off during this move. A HTTP request
+/// containing the position in [`Destination`] and the magnet_on Bool is send to the hardware.
 fn update_pos(
     magnet_status: &mut ResMut<MagnetStatus>,
     current_locations: &mut ResMut<CurrentLocations>,
@@ -223,9 +248,7 @@ fn update_pos(
     magnet_on: bool,
 ) {
     if current_locations.locations.positions.is_empty() {
-        println!("new path event");
         new_path.send(NewPathEvent);
-        println!("new path event send");
     } else {
         let goal = *current_locations.locations.positions.first().unwrap();
         **new_pos = Destination { goal };
@@ -246,11 +269,11 @@ fn update_pos(
         magnet_status.moving = true;
     }
 }
-// }
 
-/// activate when all the locations have been reached.
-/// reset all the resources linked to the current turn.
-/// update the boardstate
+/// When a new [`EndTurnEvent`] is registered this function checks whether this function has been called before.
+/// When this is not the case, it sets the value in [`Setup`] to true. If this function is called when setp is true,
+/// this means the move has been executed. The function updates all the resources linked to the current turn.
+/// After this, the system is ready for a new move from either computer or human player.
 fn end_turn(
     mut end_turn: EventReader<EndTurnEvent>,
     mut computer_turn: EventWriter<ComputerTurnEvent>,
@@ -264,40 +287,16 @@ fn end_turn(
     for _event in end_turn.iter() {
         if setup.complete {
             *current_locations = CurrentPaths { paths: vec![] };
-            // magnet_status.simulation = false;
-            // magnet_status.real = false;
             magnet_status.on = false;
             magnet_status.moving = false;
-            // player_turn.turn = false;
             let m = current_move.current_move;
             boardstate.chess.perform(m);
             player_turn.turn = !player_turn.turn;
             if player_turn.turn == Player::Computer {
                 computer_turn.send(ComputerTurnEvent);
-                println!("computer turn event send");
             }
         } else {
-            println!("SETUP COMPLETE");
             setup.complete = true;
         }
     }
 }
-
-// / TODO:
-// / 1) Maak een systeem dat een nieuwe pad berekent wanneer de current move verandert.
-// /     a) Stuur deze Move naar het pathfinding component
-// /     b) Zorgt er voor dat pathfinding een pad gaat berekenen wanneer hij een nieuwe move krijgt.
-// / 3) Hak dit pad op in locaties
-// /     a) stuur deze locaties 1 voor 1 naar zowel hardware als simulatie
-// /     b) wanneer de laatste locatie bereikt is, reset alles.
-// /
-// / Maak een systeem dat de volgende positie naar de simulatie en hardware stuurt.
-// / Hij moet dit doen zodra de magneet op beide plekken op de juiste positie is.
-// / Meegeven of de magneet uit of aan is.
-// /
-// / In magnet.rs zitten 2 (3?) systemen die hier interactie mee hebben.
-// / 1) Systeem dat reageert wanneer het een nieuwe positie krijgt en deze update naar de ontvangen waarde.
-// / 2) Systeem dat wanneer de magneet niet op deze positie is, naar deze positie beweegt.
-// / 3) Systeem dat een bericht naar de controller stuurt wanneer de positie bereikt is.
-// /
-// / De hardware bevat dezelfde systemen.

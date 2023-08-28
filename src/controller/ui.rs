@@ -1,6 +1,6 @@
 use super::controller::{self, CurrentMove, MoveEvent, Player, PlayerTurn};
 use crate::{
-    chess::{chess::Color, chess::Move, pos::Pos, BoardState},
+    chess::{chess::Move, pos::Pos},
     simulation::{board::Square, pieces::PieceComponent},
 };
 use bevy::prelude::*;
@@ -24,7 +24,11 @@ struct SelectedSquare {
 struct SelectedPiece {
     selected: Option<Entity>,
 }
-// /Allows the user to move a piece to an empty square by clicking on the piece and desired location.
+
+/// Allows the human player to move a piece to an empty square by clicking with the left mouse button
+/// on the piece and desired location. Sends a [`MoveEvent`], which triggers [`update_path`] in controller.rs
+/// 
+/// [`update_path`]: super::controller::update_path
 fn perform_move(
     mouse_button_inputs: Res<Input<MouseButton>>,
     mut selected_square: ResMut<SelectedSquare>,
@@ -33,9 +37,7 @@ fn perform_move(
     mut pieces_query: Query<(&mut PieceComponent, Entity)>,
     mut new_move: EventWriter<MoveEvent>,
     mut current_move: ResMut<CurrentMove>,
-    boardstate: Res<BoardState>,
     player_turn: Res<PlayerTurn>,
-    // mut magnet_query: Query<&mut Magnet>,
 ) {
     if player_turn.turn == Player::Human {
         if !mouse_button_inputs.just_pressed(MouseButton::Left) {
@@ -55,7 +57,6 @@ fn perform_move(
                         {
                             // Add the identifier of the piece entity to selected_piece. This identifier is later used to query the location of the selected piece.
                             selected_piece.selected = Some(optional_piece.unwrap().1);
-                            info!("selected piece: {:?}", optional_piece);
                             //return so that the selected square won't be the same as the square the selected piece is on.
                             return;
                         }
@@ -68,31 +69,8 @@ fn perform_move(
             for (square, interaction) in square_query.iter_mut() {
                 if let Interaction::Clicked = interaction {
                     selected_square.selected = Some(*square);
-                    info!("selected square: {:?}", selected_square.selected);
                 }
             }
-
-            //     if boardstate.chess[Pos {
-            //         x: square.x as isize,
-            //         y: square.y as isize,
-            //     }]
-            //     .is_some()
-            //     {
-            //         if boardstate.chess[Pos {
-            //             x: square.x as isize,
-            //             y: square.y as isize,
-            //         }].unwrap().color != player_turn.color
-            //         {
-            //             selected_square.selected = Some(*square);
-            //             info!("selected square: {:?}", selected_square.selected);
-            //         }
-            //     }
-            //     else{
-            //         selected_square.selected = Some(*square);
-            //         info!("selected square: {:?}", selected_square.selected);
-            //     }
-            // }
-            // }
         }
         // Move the selected piece to the selected square.
         if selected_piece.selected.is_some() && selected_square.selected.is_some() {
@@ -114,8 +92,6 @@ fn perform_move(
                 },
             };
             new_move.send(MoveEvent);
-            println!("move event send: Move : {:?}", current_move.current_move);
-
             selected_piece_com.target_x = selected_square.selected.unwrap().x as usize;
             selected_piece_com.target_y = selected_square.selected.unwrap().y as usize;
 

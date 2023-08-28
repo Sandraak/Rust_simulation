@@ -20,7 +20,7 @@ impl Plugin for FramePlugin {
     }
 }
 
-//The location of hte bar and carrier depend on the location of the magnet.
+///Move the location of the bar and carrier depending on the location of the magnet.
 fn move_bar_and_carrier(
     magnet_query: Query<(&mut Transform, &mut Magnet, Without<Bar>, Without<Carrier>)>,
     mut bar_query: Query<(&mut Transform, With<Bar>, Without<Magnet>, Without<Carrier>)>,
@@ -79,7 +79,7 @@ pub struct Bar {}
 #[derive(Component, Copy, Clone, Debug)]
 pub struct Carrier {}
 
-//Creates the moving bar that carries the carrier, which is a box shaped, kinematic position based rigid body.
+///Creates the moving bar that carries the carrier, which is a box shaped, kinematic position based rigid body.
 fn create_moving_bar(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -104,7 +104,7 @@ fn create_moving_bar(
         .insert(Bar {});
 }
 
-//Creates the carrier that carries the magnet, which is a box shaped, kinematic position based rigid body.
+///Creates the carrier that carries the magnet, which is a box shaped, kinematic position based rigid body.
 fn create_carrier(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,

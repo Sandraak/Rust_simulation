@@ -2,8 +2,6 @@ use bevy::prelude::*;
 use bevy_mod_picking::{Hover, PickableBundle, Selection};
 use bevy_rapier3d::prelude::{CoefficientCombineRule, Collider, Friction, RigidBody};
 
-// use crate::pieces::PieceComponent;
-
 pub const SMALL_FLOAT: f32 = 0.01;
 const BOARD_FRICTION: f32 = 0.8;
 
@@ -20,11 +18,8 @@ pub struct BoardPlugin;
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<BoardColors>()
-            // .init_resource::<SelectedSquare>()
-            // .init_resource::<SelectedPiece>()
             .add_startup_system(create_board)
             .add_startup_system(create_border)
-            // .add_system(perform_move)
             .add_system(color_squares);
     }
 }
@@ -40,7 +35,7 @@ struct BoardColors {
     black_selected: Handle<StandardMaterial>,
     border: Handle<StandardMaterial>,
 }
-///
+
 impl FromWorld for BoardColors {
     fn from_world(world: &mut World) -> Self {
         let mut materials = world
@@ -77,7 +72,7 @@ fn is_white(x: u8, y: u8) -> bool {
     (x + y + 1) % 2 == 0
 }
 
-///Creates the checked pattern that is used on a chessboard.
+/// Creates the checked pattern that is used on a chessboard.
 /// Each of the squares can be selected or hovered over because it is assigned a pickablebundle.
 /// The bottom left square is on position (0,0).
 fn create_board(

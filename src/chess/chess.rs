@@ -3,6 +3,8 @@ use std::borrow::Borrow;
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::{Index, IndexMut, Not};
 
+/// When a piece has been captured it will move to the sidelines,
+/// which are 2 colums named the Graveyard.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Graveyard {
     pub graveyard: [[Option<Piece>; 2]; 8],
@@ -105,7 +107,7 @@ impl Chess {
     pub fn board_positions() -> impl Iterator<Item = Pos> {
         (0..8).flat_map(|x| (0..8).map(move |y| Pos::new(x, y)))
     }
-
+    /// Returns an iterator over all positions of a graveyard of the current player.
     pub fn graveyard_positions(&self) -> impl Iterator<Item = Pos> {
         let mut start = 9;
         let mut end = 10;
@@ -115,7 +117,7 @@ impl Chess {
         }
         (start..=end).flat_map(|x| (-1..=8).map(move |y| Pos::new(x, y)))
     }
-
+  /// Returns an iterator over all positions around the board.
     pub fn border_positions() -> impl Iterator<Item = Pos> {
         let x_vec: [isize; 2] = [-1, 8];
         let y_vec: [isize; 2] = [-1, 8];
@@ -147,16 +149,20 @@ impl Chess {
     }
 
     /// Generates all moves for the given player, even those that would check their own king.
+    /// Each kind of piece has their own set of moves, the function starts by filtering out
+    /// all pieces that are not of the current players color. After that all moves are  
     fn unsafe_moves(&self, player: Color) -> impl Iterator<Item = Move> + '_ {
         self.pieces()
             .filter(move |(_, piece)| piece.color == player)
             .flat_map(move |(from, piece)| match piece.kind {
                 Kind::Pawn => {
+                    // A pawn can move one step straight towards the other side of the board, or diagonal
+                    // when capturing an enemy piece
                     let (step, captures, start_row) = match player {
                         Color::Black => (Shift::UP, vec![Shift::UP_LEFT, Shift::UP_RIGHT], 6),
                         Color::White => (Shift::DOWN, vec![Shift::DOWN_RIGHT, Shift::DOWN_LEFT], 1),
                     };
-
+                    // A pawn can only capture  an enemy piece that is diagonally in front it.
                     let captures = captures
                         .into_iter()
                         .map(move |dir| from + dir)
@@ -170,15 +176,18 @@ impl Chess {
 
                     let to = from + step;
                     let too = from + step * 2;
-
+                    // a pawn can move one step towards the other side of the board
                     let step =
                         (self[to].is_none() && Self::on_board(&to)).then(|| Move::new(from, to));
+                    // Or two steps when it is on its starting position
                     let leap = (from.y() == start_row && self[to].is_none() && self[too].is_none())
                         .then(|| Move::new(from, too));
 
                     Box::new(captures.chain(leap).chain(step)) as Box<dyn Iterator<Item = Move>>
                 }
                 Kind::Rook => Box::new(Shift::CARDINAL_DIRS.iter().flat_map(move |dir| {
+                    //A rook can move straight over all traversable squares in a straight line across the board.
+                    //It can capture an enemy piece when a straight path is clear between the rook and the piece.
                     let mut capture = false;
                     (1..)
                         .map(move |distance| from + *dir * distance)
@@ -187,6 +196,8 @@ impl Chess {
                         .map(move |to| Move::new(from, to))
                 })),
                 Kind::Knight => Box::new(
+                    // A knight moves in L shaped jumps in all directions. It can jump over other friendly or enemy pieces
+                    // It can capture an enemy piece when it jumps on it
                     Shift::JUMPS
                         .iter()
                         .map(move |jump| from + *jump)
@@ -200,6 +211,8 @@ impl Chess {
                         .map(move |to| Move::new(from, to)),
                 ),
                 Kind::Bishop => Box::new(Shift::DIAGONAL_DIRS.iter().flat_map(move |dir| {
+                    //A bishop can move diagonally over all traversable squares in a straight line across the board.
+                    //It can capture an enemy piece when a straight path is clear between the rook and the piece.
                     let mut capture = false;
                     (1..)
                         .map(move |distance| from + *dir * distance)
@@ -208,6 +221,7 @@ impl Chess {
                         .map(move |to| Move::new(from, to))
                 })),
                 Kind::Queen => Box::new(Shift::DIRS.iter().flat_map(move |dir| {
+                    //The queen can move over all traversable squares in all directions. 
                     let mut capture = false;
                     (1..)
                         .map(move |distance| from + *dir * distance)
@@ -216,6 +230,7 @@ impl Chess {
                         .map(move |to| Move::new(from, to))
                 })),
                 Kind::King => Box::new(
+                    //The king can move one square in any direction. 
                     Shift::DIRS
                         .iter()
                         .map(move |dir| from + *dir)
@@ -396,18 +411,6 @@ pub enum Color {
 }
 
 impl Color {
-    /// Checks whether a new game state evaluation is better than the previous best for the current
-    /// player.
-    pub fn improves(&self, score: i16, best_score: Option<i16>) -> bool {
-        match best_score {
-            None => true,
-            Some(best) => match self {
-                Color::Black => score < best,
-                Color::White => score > best,
-            },
-        }
-    }
-
     fn king_index(&self) -> usize {
         match self {
             Color::Black => 1,
@@ -472,6 +475,7 @@ impl Display for Kind {
     }
 }
 
+/// Move from a position to a position.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Move {
     pub from: Pos,
