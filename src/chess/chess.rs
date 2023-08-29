@@ -90,7 +90,7 @@ impl Chess {
 
         let turn = Color::default();
 
-        let kings = [Pos::new(4, 7), Pos::new(4, 0)];
+        let kings = [Pos::new(4, 0), Pos::new(4, 7)];
         let graveyards = [Graveyard::default(), Graveyard::default()];
 
         Chess {
@@ -130,7 +130,7 @@ impl Chess {
             .chain(
                 (y_vec)
                     .into_iter()
-                    .flat_map(|y| (-1..=8).map(move |x| Pos::new(x, y))),
+                    .flat_map(|y| (0..=7).map(move |x| Pos::new(x, y))),
             )
     }
 
@@ -494,3 +494,182 @@ impl Move {
         Move { from, to }
     }
 }
+
+#[cfg(test)]
+ mod tests{
+    use crate::chess::chess::*;
+    #[test]
+    fn test_default_graveyard() {
+        let graveyard = Graveyard::default();
+        // Verify that all elements in the graveyard are None
+        for row in &graveyard.graveyard {
+            for piece in row {
+                assert_eq!(*piece, None);
+            }
+        }
+    }
+
+    #[test]
+    fn test_default_chess() {
+        let chess = Chess::default();
+
+        // Verify the initial state of the chessboard
+        assert_eq!(chess.turn, Color::White);
+        assert_eq!(chess.kings[0], Pos::new(4, 0));
+        assert_eq!(chess.kings[1], Pos::new(4, 7));
+
+        // Verify that the initial positions of some pieces are correct
+        assert_eq!(chess.board[0][0], Some(Piece::WHITE_ROOK));
+        assert_eq!(chess.board[0][4], Some(Piece::WHITE_KING));
+        assert_eq!(chess.board[7][7], Some(Piece::BLACK_ROOK));
+
+        // Verify that the graveyards are empty
+        for graveyard in &chess.graveyards {
+            for row in &graveyard.graveyard {
+                for piece in row {
+                    assert_eq!(*piece, None);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_on_board() {
+        assert!(Chess::on_board(&Pos::new(3, 3)));
+        assert!(Chess::on_board(&Pos::new(0, 0)));
+        assert!(!Chess::on_board(&Pos::new(-1, 2)));
+        assert!(!Chess::on_board(&Pos::new(8, 5)));
+    }
+
+
+    #[test]
+    fn test_board_positions() {
+        // Get all board positions and count them
+        let positions: Vec<Pos> = Chess::board_positions().collect();
+        assert_eq!(positions.len(), 64);
+
+        // Check that all positions are on the board
+        for pos in &positions {
+            assert!(Chess::on_board(pos));
+        }
+    }
+
+    #[test]
+    fn test_graveyard_positions() {
+        let chess = Chess::default();
+        let positions: Vec<Pos> = chess.graveyard_positions().collect();
+
+        // Check that positions are within the expected range for the current player
+        if chess.turn == Color::White {
+            assert_eq!(positions.len(), 20);
+            for pos in &positions {
+                assert!(pos.x() >= -3 && pos.x() <= -2 && pos.y() >= -1 && pos.y() <= 8);
+            }
+        } else {
+            assert_eq!(positions.len(), 20);
+            for pos in &positions {
+                assert!(pos.x() >= 9 && pos.x() <= 10 && pos.y() >= -1 && pos.y() <= 8);
+            }
+        }
+    }
+
+    #[test]
+    fn test_border_positions() {
+        // Get all border positions and count them
+        let positions: Vec<Pos> = Chess::border_positions().collect();
+        assert_eq!(positions.len(), 36);
+
+        // Check that all positions are not on the board
+        for pos in &positions {
+            assert!(!Chess::on_board(pos));
+        }
+    }
+
+    #[test]
+    fn test_pieces() {
+        let chess = Chess::default();
+        let piece_count = chess.pieces().count();
+
+        // Verify that the number of pieces is as expected in the initial state
+        assert_eq!(piece_count, 32);
+    }
+
+
+    #[test]
+    fn test_moves() {
+        let mut chess = Chess::default();
+
+        // Test that there are moves available in the initial state
+        let initial_moves: Vec<Move> = chess.moves().collect();
+        assert!(!initial_moves.is_empty());
+
+        // Perform a move and verify that moves are still available
+        let first_move = initial_moves[0];
+        chess.perform(first_move);
+        let updated_moves: Vec<Move> = chess.moves().collect();
+        assert!(!updated_moves.is_empty());
+    }
+
+    #[test]
+
+
+    fn test_is_safe() {
+        let mut chess = Chess::default();
+
+        // Create a scenario where the white king is checked
+        // Perform moves (fool's mate) to put the white king in a position where it is checked
+        chess.perform(Move::new(Pos::new(5, 1), Pos::new(5, 2)));
+        assert!(!chess.is_checked(Color::White)); // king is still fine
+        chess.perform(Move::new(Pos::new(4, 6), Pos::new(4, 5)));
+        assert!(!chess.is_checked(Color::White));
+        chess.perform(Move::new(Pos::new(6, 1), Pos::new(6, 3)));
+        assert!(!chess.is_checked(Color::White));
+        chess.perform(Move::new(Pos::new(3, 7), Pos::new(7, 3)));
+        // Verify that the white king is in check
+        assert!(chess.is_checked(Color::White));
+
+        // Create a scenario where the king is not in check
+        let mut safe_chess = Chess::default();
+        // Perform some moves to create a safe scenario
+        safe_chess.perform(Move::new(Pos::new(4, 6), Pos::new(4, 4)));
+
+        // Verify that the king is not in check
+        assert!(!safe_chess.is_checked(Color::White));
+    }
+
+    #[test]
+    fn test_unsafe_moves() {
+        let chess = Chess::default();
+
+        // Test that there are unsafe moves available
+        let unsafe_moves: Vec<Move> = chess.unsafe_moves(Color::White).collect();
+        assert!(!unsafe_moves.is_empty());
+    }
+
+    #[test]
+    fn test_perform() {
+        let mut chess = Chess::default();
+
+        // Perform a move and verify that the board state changes
+        let initial_piece = chess[Pos::new(4, 6)].unwrap();
+        let from = Pos::new(4, 6);
+        assert_eq!(chess[from], Some(initial_piece));
+        let to = Pos::new(4, 4);
+        let chess_before_move = chess.clone();
+        chess.perform(Move::new(from, to));
+
+        
+        assert_eq!(chess[to], Some(initial_piece));
+        assert_eq!(chess[from], None);
+        assert_eq!(chess_before_move[to], None);
+    }
+
+    #[test]
+    fn test_evaluate() {
+        let chess = Chess::default();
+        // Test the evaluation function (you can add more scenarios)
+        let evaluation = chess.evaluate();
+        // In the initial state, it's common to have a positive evaluation for White.
+        assert!(evaluation >= 0);
+    }
+ }
