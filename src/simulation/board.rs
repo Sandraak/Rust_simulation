@@ -64,7 +64,6 @@ impl FromWorld for BoardColors {
     }
 }
 
-
 /// Square on the chessboard
 #[derive(Component, Copy, Clone, Debug)]
 pub struct Square {

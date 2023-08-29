@@ -1,7 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-
 ///Position on the chessboard
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Pos {

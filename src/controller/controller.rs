@@ -154,12 +154,14 @@ fn poll() {
     });
 }
 
-
 /// When a new [`MoveEvent`] is registered this function sends a PathEvent which triggers the function
 /// [`give_path`] in astar.rs.
-/// 
+///
 /// [`give_path`]: crate::pathfinding::astar::give_path
-pub(crate) fn update_path(mut new_move: EventReader<MoveEvent>, mut new_path: EventWriter<PathEvent>) {
+pub(crate) fn update_path(
+    mut new_move: EventReader<MoveEvent>,
+    mut new_path: EventWriter<PathEvent>,
+) {
     for _event in new_move.iter() {
         new_path.send(PathEvent);
     }
@@ -168,7 +170,7 @@ pub(crate) fn update_path(mut new_move: EventReader<MoveEvent>, mut new_path: Ev
 /// When a new [`NewPathEvent`] is registered, this function checks whether the path vector in [`CurrentPaths`]
 /// is empty. If this is the case, all paths have been executed and an [`EndTurnEvent`] is send, which triggers
 /// [`end_turn`].
-/// When this is not the case, the first path in [`CurrentPaths`] is moved to [`CurrentLocations`], 
+/// When this is not the case, the first path in [`CurrentPaths`] is moved to [`CurrentLocations`],
 /// and a [`FirstMoveEvent`] is send.
 fn update_locations(
     mut current_paths: ResMut<CurrentPaths>,
@@ -190,7 +192,7 @@ fn update_locations(
 
 /// When a new [`MagnetEvent`] is registered, this function checks whether the magnet has
 /// reached its destination in both the simulation and hardware. When this is the case, the function
-/// [`update_pos`] with magnet_on = True is called. 
+/// [`update_pos`] with magnet_on = True is called.
 fn update_current_pos(
     mut magnet_update: EventReader<MagnetEvent>,
     mut magnet_status: ResMut<MagnetStatus>,
@@ -213,7 +215,7 @@ fn update_current_pos(
 
 /// When a new [`FirstMoveEvent`] is registered, this function checks whether the magnet has
 /// reached its destination in both the simulation and hardware. When this is the case, the function
-/// [`update_pos`] with magnet_on = False is called. The magnet must be off during this move because the 
+/// [`update_pos`] with magnet_on = False is called. The magnet must be off during this move because the
 /// first position of a path is never part of the intended move, but puts the magnet in place for said move.
 fn set_first_pos(
     mut first_move: EventReader<FirstMoveEvent>,
@@ -232,7 +234,6 @@ fn set_first_pos(
         );
     }
 }
-
 
 /// Updates the next position of the magnet based on the value in [`CurrentLocations`]. When this
 /// vector is empty, there are no moves in the current path and a [`NewPathEvent`] is called, which triggers

@@ -34,7 +34,7 @@ pub struct Magnet {
 
 /// System that checks whether the magnet has reached it's destination.
 /// When this is the case, this function sends a [`MagnetEvent`] which triggers
-/// [`update_current_pos`] in controller.rs
+/// update_current_pos in controller.rs
 fn signaler(
     magnet_query: Query<(&Transform, &Magnet, Without<Bar>, Without<Carrier>)>,
     mut magnet_update: EventWriter<MagnetEvent>,
@@ -72,7 +72,6 @@ fn move_magnet(
         magnet.target_pos.y = destination.goal.y() as f32;
     }
 }
-
 
 /// Creates the magnet, which is a kinematic positition based rigid body.
 fn create_magnet(

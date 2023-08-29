@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use self::chess::Chess;
+use bevy::prelude::*;
 
 /// Handles the boardstate and the rules of chess.
 pub mod chess;

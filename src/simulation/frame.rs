@@ -11,7 +11,6 @@ const CARRIER_OFFSET: Vec3 = Vec3::new(0.0, CARRIER_Y, 0.0);
 ///Plugin for creating and moving parts of the frame, used by the bevy app.
 pub struct FramePlugin;
 
-
 impl Plugin for FramePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<FrameColors>()
@@ -76,7 +75,6 @@ impl FromWorld for FrameColors {
         }
     }
 }
-
 
 /// Moving bar that carries the carrier
 #[derive(Component, Copy, Clone, Debug)]

@@ -29,7 +29,7 @@ struct SelectedPiece {
 
 /// Allows the human player to move a piece to an empty square by clicking with the left mouse button
 /// on the piece and desired location. Sends a [`MoveEvent`], which triggers [`update_path`] in controller.rs
-/// 
+///
 /// [`update_path`]: super::controller::update_path
 fn perform_move(
     mouse_button_inputs: Res<Input<MouseButton>>,

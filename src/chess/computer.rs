@@ -1,4 +1,4 @@
-use bevy::prelude::{EventReader, EventWriter, Plugin, ResMut, Res};
+use bevy::prelude::{EventReader, EventWriter, Plugin, Res, ResMut};
 
 use crate::{
     chess::{chess::Chess, chess::Move},
@@ -24,12 +24,12 @@ impl Plugin for ChessComputerPlugin {
 }
 
 /// When a new [`ComputerTurnEvent`] is registered this function will generate a new move,
-/// if it's the computer player's turn. When a new move had been found, this move will be 
+/// if it's the computer player's turn. When a new move had been found, this move will be
 /// stored in [`CurrentMove`]
 /// and the function will send a [`MoveEvent`] triggering [`update_path`].
-/// When there are no more moves, the game has ended and 
+/// When there are no more moves, the game has ended and
 /// the outcome will be printed.
-/// 
+///
 /// [`update_path`]: crate::controller::controller::update_path
 pub fn return_move(
     mut computer_turn: EventReader<ComputerTurnEvent>,
@@ -119,18 +119,34 @@ pub fn minimax(chess: &Chess, depth: u8, mut alpha: i16, mut beta: i16) -> BestM
     }
 }
 
+
+//TESTS
 #[cfg(test)]
 mod tests {
-    use crate::chess::{chess::Chess, chess::{Move, Color}, computer::minimax, pos::Pos};
+    use crate::chess::{
+        chess::Chess,
+        chess::{Color, Move},
+        computer::minimax,
+        pos::Pos,
+    };
 
     #[test]
     fn test_minimax() {
         // Create a chess board with a specific state for testing
         let mut chess = Chess::default();
         // Setup for fools mate
-        chess.perform(Move{from: Pos::new(5, 1), to: Pos::new(5, 2)});
-        chess.perform(Move{from: Pos::new(4, 6), to: Pos::new(4, 5)});
-        chess.perform(Move{from: Pos::new(6, 1), to: Pos::new(6, 3)});
+        chess.perform(Move {
+            from: Pos::new(5, 1),
+            to: Pos::new(5, 2),
+        });
+        chess.perform(Move {
+            from: Pos::new(4, 6),
+            to: Pos::new(4, 5),
+        });
+        chess.perform(Move {
+            from: Pos::new(6, 1),
+            to: Pos::new(6, 3),
+        });
         // The black player can checkmate white by performing:
         // chess.perform(Move::new(Pos::new(3, 7), Pos::new(7, 3)));
         chess.turn = Color::Black;
@@ -138,6 +154,12 @@ mod tests {
         let best_move = minimax(&chess, 2, i16::MIN, i16::MAX);
         // Assert that the best move and score match the expected values
         // In this example, we expect the best move to be the one that puts white in a checkmate
-        assert_eq!(best_move.m.unwrap(), Move{from: Pos::new(3, 7), to: Pos::new(7, 3)});
+        assert_eq!(
+            best_move.m.unwrap(),
+            Move {
+                from: Pos::new(3, 7),
+                to: Pos::new(7, 3)
+            }
+        );
     }
 }

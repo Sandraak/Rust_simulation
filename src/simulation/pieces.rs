@@ -24,7 +24,6 @@ const PIECES_RESTITUTION: f32 = 0.0;
 /// plugin containing information about creating and moving pieces. This is used by the bevy app.
 pub struct PiecesPlugin;
 
-
 impl Plugin for PiecesPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(create_pieces)

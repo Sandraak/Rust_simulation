@@ -62,11 +62,10 @@ impl Plugin for PathfindingPlugin {
 }
 /// When a new [`Pathevent`] is registerd, this function will update [`CurrentPaths`] to
 /// a vector of paths returned by [`calculate_path`]. It then sends a [`NewPathEvent`] which
-/// triggers [`update_locations`] in controller.rs
-/// 
+/// triggers update_locations in controller.rs
+///
 /// [`Pathevent`]: crate::controller::controller::PathEvent
-/// [`update_locations`]: crate::controller::controller::update_locations
-pub (crate) fn give_path(
+pub(crate) fn give_path(
     mut new_move: EventReader<PathEvent>,
     current_move: Res<CurrentMove>,
     boardstate: Res<BoardState>,
@@ -81,19 +80,18 @@ pub (crate) fn give_path(
     }
 }
 
-
 /// Calculates all the paths that are necessary for a move to occur without any collisions.
 /// Any obstructing pieces will first move out of the way of a captured piece that is moving to the graveyard.
 /// After this piece has reached the graveyard, any obstructing pieces will move out of the way of the attacking piece,
-/// When the attacking piece has reached its destination. The the pieces that moved out of the attacking piece's way 
+/// When the attacking piece has reached its destination. The the pieces that moved out of the attacking piece's way
 /// will return to their original positions. Then pieces that moved out of the captured piece's way will return
-/// to their original positions. 
+/// to their original positions.
 fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> Option<Vec<Path>> {
     let mut paths_info: Vec<PathInformation> = vec![];
     // The path for the original move as received by the controller.
     let original_path_info = a_star(mov.current_move.from, mov.current_move.to, boardstate)?;
     // Information about the path for the (optional) captured piece. Should be changed to a default value of Pathinformation
-    let mut capture_path_info: PathInformation = original_path_info.clone();                                                                           
+    let mut capture_path_info: PathInformation = original_path_info.clone();
     paths_info.push(original_path_info.clone());
     // If a piece has been captured, calculate a path to the graveyard for this piece.
     if original_path_info.capture {
@@ -104,12 +102,12 @@ fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> Optio
         if original_path_info.crossed_pieces.is_empty() {
             paths_info.insert(0, capture_path_info.clone());
         } else {
-            // The vector will be reversed when pieces have been crossed, so for the 
+            // The vector will be reversed when pieces have been crossed, so for the
             // captured piece to move first its path has to be put and the back of the vector
             paths_info.push(capture_path_info.clone());
         }
     }
-    // checks whether no pieces are crossed in either the original path 
+    // checks whether no pieces are crossed in either the original path
     // or the captured piece's path.
     let mut no_crossed_pieces = true;
     for path_info in paths_info.clone() {
@@ -152,7 +150,7 @@ fn calculate_path(mov: &Res<CurrentMove>, boardstate: &Res<BoardState>) -> Optio
                 }
             }
         }
-        // When the path of an obstructing piece moving out of the way also crosses a piece, 
+        // When the path of an obstructing piece moving out of the way also crosses a piece,
         // new paths need to be found.
         for mut path_info in paths_info.clone() {
             if !path_info.crossed_pieces.is_empty()
@@ -342,8 +340,7 @@ fn capture(start_pos: Pos, boardstate: &Res<BoardState>) -> Option<PathInformati
     a_star(start_pos, end_pos, boardstate)
 }
 
-
-/// Finds a position for a obstructing piece to move to such that the position: 
+/// Finds a position for a obstructing piece to move to such that the position:
 /// 1) is not on the path
 /// 2) is not occupied by another obstructing piece
 /// 3) not occupied by another piece
@@ -384,10 +381,14 @@ fn find_end_pos(
 }
 
 
+//TESTS
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::chess::{BoardState,chess::{Piece, Color}};
+    use crate::chess::{
+        chess::{Color, Piece},
+        BoardState,
+    };
 
     #[test]
     fn test_within_bounds() {
@@ -402,7 +403,7 @@ mod tests {
     fn test_find_end_pos() {
         // Create a board state with some pieces
         let mut board_state = BoardState::default();
-        board_state.chess.board[2][2] =  Some(Piece::WHITE_ROOK);
+        board_state.chess.board[2][2] = Some(Piece::WHITE_ROOK);
         board_state.chess.board[3][2] = Some(Piece::BLACK_PAWN);
         board_state.chess.board[2][3] = Some(Piece::BLACK_KNIGHT);
         board_state.chess.turn = Color::White;
@@ -411,19 +412,29 @@ mod tests {
         let start_pos = Pos::new(2, 2);
         let paths_info = vec![
             PathInformation {
-                path: Path { positions: vec![Pos::new(2, 2), Pos::new(3, 2), Pos::new(4, 2)] },
+                path: Path {
+                    positions: vec![Pos::new(2, 2), Pos::new(3, 2), Pos::new(4, 2)],
+                },
                 crossed_pieces: vec![],
                 capture: false,
             },
             PathInformation {
-                path: Path { positions: vec![Pos::new(2, 2), Pos::new(2, 3), Pos::new(2, 4)] },
+                path: Path {
+                    positions: vec![Pos::new(2, 2), Pos::new(2, 3), Pos::new(2, 4)],
+                },
                 crossed_pieces: vec![],
                 capture: false,
             },
         ];
         let locations = vec![
-            Move { from: Pos::new(2, 2), to: Pos::new(3, 2) },
-            Move { from: Pos::new(2, 2), to: Pos::new(2, 3) },
+            Move {
+                from: Pos::new(2, 2),
+                to: Pos::new(3, 2),
+            },
+            Move {
+                from: Pos::new(2, 2),
+                to: Pos::new(2, 3),
+            },
         ];
 
         // Call find_end_pos function
@@ -432,7 +443,9 @@ mod tests {
         // Assert that the end position meets the criteria
         assert_eq!(end_pos.from, start_pos);
         assert_ne!(end_pos.to, start_pos);
-        assert!(!paths_info.iter().any(|info| info.path.positions.contains(&end_pos.to)));
+        assert!(!paths_info
+            .iter()
+            .any(|info| info.path.positions.contains(&end_pos.to)));
         assert!(!locations.iter().any(|loc| loc.to == end_pos.to));
         assert!(board_state.chess[end_pos.to].is_none());
     }

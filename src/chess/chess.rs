@@ -26,7 +26,6 @@ impl Graveyard {
     }
 }
 
-
 /// Keeps track of the state of the game, the location of all the pieces(boardstate) is kept in board. Whose turn it is in turn,
 /// the location of both kings in kings. And the state of the graveyards in graveyards.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -120,7 +119,7 @@ impl Chess {
         }
         (start..=end).flat_map(|x| (-1..=8).map(move |y| Pos::new(x, y)))
     }
-  /// Returns an iterator over all positions around the board.
+    /// Returns an iterator over all positions around the board.
     pub fn border_positions() -> impl Iterator<Item = Pos> {
         let x_vec: [isize; 2] = [-1, 8];
         let y_vec: [isize; 2] = [-1, 8];
@@ -224,7 +223,7 @@ impl Chess {
                         .map(move |to| Move::new(from, to))
                 })),
                 Kind::Queen => Box::new(Shift::DIRS.iter().flat_map(move |dir| {
-                    //The queen can move over all traversable squares in all directions. 
+                    //The queen can move over all traversable squares in all directions.
                     let mut capture = false;
                     (1..)
                         .map(move |distance| from + *dir * distance)
@@ -233,7 +232,7 @@ impl Chess {
                         .map(move |to| Move::new(from, to))
                 })),
                 Kind::King => Box::new(
-                    //The king can move one square in any direction. 
+                    //The king can move one square in any direction.
                     Shift::DIRS
                         .iter()
                         .map(move |dir| from + *dir)
@@ -375,7 +374,6 @@ impl Outcome {
     }
 }
 
-
 /// Information about the color and kind of the piece.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Piece {
@@ -495,8 +493,11 @@ impl Move {
     }
 }
 
+
+
+//TESTS
 #[cfg(test)]
- mod tests{
+mod tests {
     use crate::chess::chess::*;
     #[test]
     fn test_default_graveyard() {
@@ -540,7 +541,6 @@ impl Move {
         assert!(!Chess::on_board(&Pos::new(-1, 2)));
         assert!(!Chess::on_board(&Pos::new(8, 5)));
     }
-
 
     #[test]
     fn test_board_positions() {
@@ -594,7 +594,6 @@ impl Move {
         assert_eq!(piece_count, 32);
     }
 
-
     #[test]
     fn test_moves() {
         let mut chess = Chess::default();
@@ -611,7 +610,6 @@ impl Move {
     }
 
     #[test]
-
 
     fn test_is_safe() {
         let mut chess = Chess::default();
@@ -658,7 +656,6 @@ impl Move {
         let chess_before_move = chess.clone();
         chess.perform(Move::new(from, to));
 
-        
         assert_eq!(chess[to], Some(initial_piece));
         assert_eq!(chess[from], None);
         assert_eq!(chess_before_move[to], None);
@@ -667,23 +664,31 @@ impl Move {
     #[test]
     fn test_evaluate() {
         let chess = Chess::default();
-        // Test the evaluation function (you can add more scenarios)
         let evaluation = chess.evaluate();
         // In the initial state, it's common to have a positive evaluation for White.
         assert!(evaluation >= 0);
     }
 
     #[test]
-    fn test_outcome(){
+    fn test_outcome() {
         let mut chess = Chess::default();
         // Setup for fools mate
-        chess.perform(Move{from: Pos::new(5, 1), to: Pos::new(5, 2)});
-        chess.perform(Move{from: Pos::new(4, 6), to: Pos::new(4, 5)});
-        chess.perform(Move{from: Pos::new(6, 1), to: Pos::new(6, 3)});
+        chess.perform(Move {
+            from: Pos::new(5, 1),
+            to: Pos::new(5, 2),
+        });
+        chess.perform(Move {
+            from: Pos::new(4, 6),
+            to: Pos::new(4, 5),
+        });
+        chess.perform(Move {
+            from: Pos::new(6, 1),
+            to: Pos::new(6, 3),
+        });
         chess.perform(Move::new(Pos::new(3, 7), Pos::new(7, 3)));
 
         chess.turn = Color::White;
-        // Black one bby checkmating white
+        // Black won by checkmating white
         assert_eq!(chess.outcome(), Some(Outcome::Winner(Color::Black)));
     }
- }
+}
