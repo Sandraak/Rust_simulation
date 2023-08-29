@@ -54,7 +54,8 @@ pub fn return_move(
         }
     }
 }
-/// Function for determining the next move of the computer player.
+/// Function for determining the next move of the computer player. For the Black player
+/// the score has to be Minimized, and maximized for the white player
 /// It takes the current [`BoardState`] and checks what is the best move
 /// for the current player, Black or White. Alpha-beta pruning is used
 /// to scrap the irrelevant branches, making the function a lot faster.
@@ -115,5 +116,28 @@ pub fn minimax(chess: &Chess, depth: u8, mut alpha: i16, mut beta: i16) -> BestM
             m: Some(best_move.unwrap()),
             score: best_score,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::chess::{chess::Chess, chess::{Move, Color}, computer::minimax, pos::Pos};
+
+    #[test]
+    fn test_minimax() {
+        // Create a chess board with a specific state for testing
+        let mut chess = Chess::default();
+        // Setup for fools mate
+        chess.perform(Move{from: Pos::new(5, 1), to: Pos::new(5, 2)});
+        chess.perform(Move{from: Pos::new(4, 6), to: Pos::new(4, 5)});
+        chess.perform(Move{from: Pos::new(6, 1), to: Pos::new(6, 3)});
+        // The black player can checkmate white by performing:
+        // chess.perform(Move::new(Pos::new(3, 7), Pos::new(7, 3)));
+        chess.turn = Color::Black;
+        // Call the minimax function with the known board state
+        let best_move = minimax(&chess, 2, i16::MIN, i16::MAX);
+        // Assert that the best move and score match the expected values
+        // In this example, we expect the best move to be the one that puts white in a checkmate
+        assert_eq!(best_move.m.unwrap(), Move{from: Pos::new(3, 7), to: Pos::new(7, 3)});
     }
 }

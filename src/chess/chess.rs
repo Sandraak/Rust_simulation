@@ -672,4 +672,18 @@ impl Move {
         // In the initial state, it's common to have a positive evaluation for White.
         assert!(evaluation >= 0);
     }
+
+    #[test]
+    fn test_outcome(){
+        let mut chess = Chess::default();
+        // Setup for fools mate
+        chess.perform(Move{from: Pos::new(5, 1), to: Pos::new(5, 2)});
+        chess.perform(Move{from: Pos::new(4, 6), to: Pos::new(4, 5)});
+        chess.perform(Move{from: Pos::new(6, 1), to: Pos::new(6, 3)});
+        chess.perform(Move::new(Pos::new(3, 7), Pos::new(7, 3)));
+
+        chess.turn = Color::White;
+        // Black one bby checkmating white
+        assert_eq!(chess.outcome(), Some(Outcome::Winner(Color::Black)));
+    }
  }
