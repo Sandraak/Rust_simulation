@@ -382,3 +382,58 @@ fn find_end_pos(
         to: end_pos,
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::chess::{BoardState,chess::{Piece, Color}};
+
+    #[test]
+    fn test_within_bounds() {
+        assert!(within_bounds(0, 0));
+        assert!(within_bounds(5, 5));
+        assert!(within_bounds(-3, 0));
+        assert!(within_bounds(10, 8));
+        assert!(!within_bounds(-4, 0));
+        assert!(!within_bounds(11, 5));
+    }
+    #[test]
+    fn test_find_end_pos() {
+        // Create a board state with some pieces
+        let mut board_state = BoardState::default();
+        board_state.chess.board[2][2] =  Some(Piece::WHITE_ROOK);
+        board_state.chess.board[3][2] = Some(Piece::BLACK_PAWN);
+        board_state.chess.board[2][3] = Some(Piece::BLACK_KNIGHT);
+        board_state.chess.turn = Color::White;
+
+        // Define the start position, paths, and occupied locations
+        let start_pos = Pos::new(2, 2);
+        let paths_info = vec![
+            PathInformation {
+                path: Path { positions: vec![Pos::new(2, 2), Pos::new(3, 2), Pos::new(4, 2)] },
+                crossed_pieces: vec![],
+                capture: false,
+            },
+            PathInformation {
+                path: Path { positions: vec![Pos::new(2, 2), Pos::new(2, 3), Pos::new(2, 4)] },
+                crossed_pieces: vec![],
+                capture: false,
+            },
+        ];
+        let locations = vec![
+            Move { from: Pos::new(2, 2), to: Pos::new(3, 2) },
+            Move { from: Pos::new(2, 2), to: Pos::new(2, 3) },
+        ];
+
+        // Call find_end_pos function
+        let end_pos = find_end_pos(start_pos, &paths_info, &board_state, &locations);
+
+        // Assert that the end position meets the criteria
+        assert_eq!(end_pos.from, start_pos);
+        assert_ne!(end_pos.to, start_pos);
+        assert!(!paths_info.iter().any(|info| info.path.positions.contains(&end_pos.to)));
+        assert!(!locations.iter().any(|loc| loc.to == end_pos.to));
+        assert!(board_state.chess[end_pos.to].is_none());
+    }
+}
