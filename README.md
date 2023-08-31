@@ -2,7 +2,7 @@
 
 # Get started
 
-You can clone the source code from this [repository](https://github.com/Sandraak/Rust_simulation/tree/main). Before you can run it, Rust, Bevy and some dependencies need to be installed. Below are instructions to get this code running on either Ubuntu or Windows.
+You can clone the source code from this [repository](https://github.com/Sandraak/Rust_simulation/tree/main). Before you can run it, Rust, Bevy and some dependencies need to be installed. Below are instructions on how to get this code running on either Ubuntu or Windows.
 
 ## Ubuntu
 
