@@ -146,8 +146,8 @@ Exit with ``ctrl-X`` en save your changes.
             }
         >
 
-    * Start the DHCP service
-        ```console sudo service isc-dhcp-server start```
+6.Start the DHCP service
+```console sudo service isc-dhcp-server start```
 
     # Ready!
 
