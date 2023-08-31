@@ -154,12 +154,12 @@ Exit with ``ctrl-X`` en save your changes.
     Once you have completed all previously listed steps, you can run the whole system. There are a few things to pay attention to for a smooth run.
     
     ## Hardware
-    1. Place the physical magnet neatly beneath square ``(0,0)``.
-    2. Upload the [code](https://github.com/Sandraak/Automated_chessboard) to the Arduino and wait for the server to start.
-    3. Plugin the power wupply for the magnet and motors.
+        1. Place the physical magnet neatly beneath square ``(0,0)``.
+        2. Upload the [code](https://github.com/Sandraak/Automated_chessboard) to the Arduino and wait for the server to start.
+        3. Plugin the power wupply for the magnet and motors.
     ## Simulation
-    1. Start the simulation.
-    2. Wait for the magnet to reach position (0,0).
-    2. Perform a move (default: playing as White).
+        1. Start the simulation.
+        2. Wait for the magnet to reach position (0,0).
+        2. Perform a move (default: playing as White).
 
 
