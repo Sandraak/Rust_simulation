@@ -119,7 +119,7 @@ The code uses some libraries you still need to include using the library manager
 ### Establishing a connection
 When this is all setup you need to be able to setup a connection between your laptop and the Arduino. You can do this by executing the following steps:
 
-1. Assign IP 192.168.1.1 and subnetmask 255.255.255.0 to the ethernet card (not your WiFI connection) van de laptop. You can find information on how to this this by searching on “assign static ethernet IP address in <operating system>” in your search engine. If needed, you can give your WiFi connection a higher priority than ethernet.
+1. Assign IP 192.168.1.1 and subnetmask 255.255.255.0 to the ethernet card (not your WiFI connection) of your laptop. You can find information on how to this this by searching on “assign static ethernet IP address in <operating system>” in your search engine. If needed, you can give your WiFi connection a higher priority than ethernet.
 
 2. Install the DHCP server
 ```console sudo apt install isc-dhcp-server```
@@ -128,7 +128,8 @@ The server might try to start and fail, you can ignore this.
 3. Configure the DHCP server
 ```console sudo nano /etc/default/isc-dhcp-server ```
 Replace the line ``` INTERFACESv4="" ``` to ```INTERFACESv4="eth0"```
-Exit with ``ctrl-X`` en save your changes.
+Exit with ``ctrl-X`` and save your changes.
+
 4. Stop the DHCP services
 ```console sudo systemctl stop isc-dhcp-server.service```
 5. Alter the DCHP configuration
