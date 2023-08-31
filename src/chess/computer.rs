@@ -119,7 +119,6 @@ pub fn minimax(chess: &Chess, depth: u8, mut alpha: i16, mut beta: i16) -> BestM
     }
 }
 
-
 //TESTS
 #[cfg(test)]
 mod tests {

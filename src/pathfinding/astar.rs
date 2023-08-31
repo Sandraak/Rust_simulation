@@ -380,7 +380,6 @@ fn find_end_pos(
     }
 }
 
-
 //TESTS
 #[cfg(test)]
 mod tests {

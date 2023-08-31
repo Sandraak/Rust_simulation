@@ -89,7 +89,7 @@ impl Chess {
 
         let turn = Color::default();
 
-        let kings = [Pos::new(4, 0), Pos::new(4, 7)];
+        let kings = [Pos::new(0, 4), Pos::new(4, 7)];
         let graveyards = [Graveyard::default(), Graveyard::default()];
 
         Chess {
@@ -492,8 +492,6 @@ impl Move {
         Move { from, to }
     }
 }
-
-
 
 //TESTS
 #[cfg(test)]

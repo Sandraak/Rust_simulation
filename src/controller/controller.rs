@@ -136,12 +136,14 @@ fn poll_system(
     mut magnet_status: ResMut<MagnetStatus>,
     mut magnet_event: EventWriter<MagnetEvent>,
 ) {
-    if magnet_status.moving {
+    if magnet_status.moving && magnet_status.simulation {
         poll();
         if POLLING_DONE.load(Ordering::Relaxed) {
+            println!("poll done");
             magnet_status.real = true;
             magnet_status.moving = false;
             magnet_event.send(MagnetEvent);
+            POLLING_DONE.store(false, Ordering::Relaxed);
         }
     }
 }
@@ -225,13 +227,15 @@ fn set_first_pos(
     mut new_path: EventWriter<NewPathEvent>,
 ) {
     for _event in first_move.iter() {
-        update_pos(
-            &mut magnet_status,
-            &mut current_locations,
-            &mut new_pos,
-            &mut new_path,
-            false,
-        );
+        if magnet_status.simulation && magnet_status.real {
+            update_pos(
+                &mut magnet_status,
+                &mut current_locations,
+                &mut new_pos,
+                &mut new_path,
+                false,
+            );
+        }
     }
 }
 
