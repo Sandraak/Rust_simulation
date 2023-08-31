@@ -74,6 +74,7 @@ impl Not for Player {
 #[derive(Resource, Default, Debug)]
 pub struct Setup {
     pub complete: bool,
+    pub turn_ended: bool,
 }
 ///Vector with all the paths the magnet still has to cover.
 #[derive(Resource, Default, Debug)]
@@ -136,10 +137,9 @@ fn poll_system(
     mut magnet_status: ResMut<MagnetStatus>,
     mut magnet_event: EventWriter<MagnetEvent>,
 ) {
-    if magnet_status.moving && magnet_status.simulation {
+    if magnet_status.moving {
         poll();
         if POLLING_DONE.load(Ordering::Relaxed) {
-            println!("poll done");
             magnet_status.real = true;
             magnet_status.moving = false;
             magnet_event.send(MagnetEvent);
@@ -227,7 +227,6 @@ fn set_first_pos(
     mut new_path: EventWriter<NewPathEvent>,
 ) {
     for _event in first_move.iter() {
-        if magnet_status.simulation && magnet_status.real {
             update_pos(
                 &mut magnet_status,
                 &mut current_locations,
@@ -235,7 +234,6 @@ fn set_first_pos(
                 &mut new_path,
                 false,
             );
-        }
     }
 }
 
@@ -263,7 +261,6 @@ fn update_pos(
         magnet_status.simulation = false;
         magnet_status.real = false;
         magnet_status.on = magnet_on;
-
         let goal_url = format!(
             "{}/{}/{}/{}",
             "http://192.168.1.22",

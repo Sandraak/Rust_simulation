@@ -7,20 +7,20 @@ use std::ops::{Index, IndexMut, Not};
 /// which are 2 colums named the Graveyard.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Graveyard {
-    pub graveyard: [[Option<Piece>; 2]; 8],
+    pub graveyard: [[Option<Piece>; 1]; 8],
 }
 
 impl Graveyard {
     pub fn default() -> Self {
         let graveyard = [
-            [None, None],
-            [None, None],
-            [None, None],
-            [None, None],
-            [None, None],
-            [None, None],
-            [None, None],
-            [None, None],
+            [None],
+            [None],
+            [None],
+            [None],
+            [None],
+            [None],
+            [None],
+            [None],
         ];
         Graveyard { graveyard }
     }
@@ -89,7 +89,7 @@ impl Chess {
 
         let turn = Color::default();
 
-        let kings = [Pos::new(0, 4), Pos::new(4, 7)];
+        let kings = [Pos::new(4, 0), Pos::new(4, 7)];
         let graveyards = [Graveyard::default(), Graveyard::default()];
 
         Chess {
@@ -112,9 +112,9 @@ impl Chess {
     /// Returns an iterator over all positions of a graveyard of the current player.
     pub fn graveyard_positions(&self) -> impl Iterator<Item = Pos> {
         let mut start = 9;
-        let mut end = 10;
+        let mut end = 9;
         if self.turn == Color::White {
-            start = -3;
+            start = -2;
             end = -2;
         }
         (start..=end).flat_map(|x| (-1..=8).map(move |y| Pos::new(x, y)))
@@ -559,14 +559,14 @@ mod tests {
 
         // Check that positions are within the expected range for the current player
         if chess.turn == Color::White {
-            assert_eq!(positions.len(), 20);
+            assert_eq!(positions.len(), 10);
             for pos in &positions {
-                assert!(pos.x() >= -3 && pos.x() <= -2 && pos.y() >= -1 && pos.y() <= 8);
+                assert!(pos.x() >= -2 && pos.x() <= -2 && pos.y() >= -1 && pos.y() <= 8);
             }
         } else {
-            assert_eq!(positions.len(), 20);
+            assert_eq!(positions.len(), 10);
             for pos in &positions {
-                assert!(pos.x() >= 9 && pos.x() <= 10 && pos.y() >= -1 && pos.y() <= 8);
+                assert!(pos.x() >= 9 && pos.x() <= 9 && pos.y() >= -1 && pos.y() <= 8);
             }
         }
     }

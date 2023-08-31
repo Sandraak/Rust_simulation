@@ -39,11 +39,5 @@ Compiling with clang is also possible - replace the ```console g++ ``` package w
 
 ### Rust Installation
 
-To download Rustup and install Rust, run the following in your terminal, then follow the on-screen instructions.
-```console
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-rustup update
-```
-
 ### Bevy Installation
 

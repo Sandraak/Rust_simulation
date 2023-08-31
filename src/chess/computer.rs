@@ -41,7 +41,7 @@ pub fn return_move(
     for _event in computer_turn.iter() {
         if player_turn.turn == Player::Computer {
             let chess = boardstate.chess;
-            let best_move = minimax(&chess, 4, i16::MIN, i16::MAX);
+            let best_move = minimax(&chess, 3, i16::MIN, i16::MAX);
             if best_move.m.is_some() {
                 current_move.current_move = best_move.m.unwrap();
                 new_move.send(MoveEvent);
