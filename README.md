@@ -13,9 +13,7 @@ To download Rustup and install Rust, run the following in your terminal, then fo
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-You can update your Rust toolchain by running ```console 
-rustup update
-```
+You can update your Rust toolchain by running ```console rustup update```
 
 When you install Rustup you’ll also get the latest stable version of the Rust build tool and package manager, also known as Cargo. Cargo does lots of things:
 
