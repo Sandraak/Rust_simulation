@@ -96,7 +96,7 @@ You can fix this error by using Rust's nightly toolchain, more information about
 
 The system will send HTTP Requests to an Arduino, which controls two steppermotors and an elektromagnet to show the same behaviour as in the simulation. You can download the code from this [repository](https://github.com/Sandraak/Automated_chessboard).
 
-### 
+### Hardware
 For this code to function you need to flash it to an Arduino Uno with Ethernetshield that is connected to the hardware according to the following scheme.
 
 ### Arduino IDE
@@ -107,7 +107,7 @@ You can install the Arduino IDE using the instructins on the [downloadpage](http
     Installing from the ubuntu store can give some weird behaviour, the Arduino IDE works better when you install it using the appimage in the previously posted link.
 >
 
-#### Libraries
+#### Dependencies
 The code uses some libraries you still need to include using the library manager in the Arduino IDE. You can do so by clicking on ``Sketch -> Include Libraries -> Manage Libraries ...``. A search bar will appear, search and add the following libraries:
 * ArduinoUnit.h
 * Ethernet.h
@@ -148,4 +148,18 @@ Exit with ``ctrl-X`` en save your changes.
 
     * Start the DHCP service
         ```console sudo service isc-dhcp-server start```
+
+    # Ready!
+
+    Once you have completed all previously listed steps, you can run the whole system. There are a few things to pay attention to for a smooth run.
+    
+    ## Hardware
+    1. Place the physical magnet neatly beneath square ``(0,0)``.
+    2. Upload the [code](https://github.com/Sandraak/Automated_chessboard) to the Arduino and wait for the server to start.
+    3. Plugin the power wupply for the magnet and motors.
+    ## Simulation
+    1. Start the simulation.
+    2. Wait for the magnet to reach position (0,0).
+    2. Perform a move (default: playing as White).
+
 
