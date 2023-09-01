@@ -1,4 +1,9 @@
 # Rust_simulation
+When you're new to Rust, here are some resources that can help you while working on this project. I would recommend reading chapter 4 of the Rust Book, this explains Rust's borrowing system, which can be confusing for new users.
+
+* [Rust Book](https://doc.rust-lang.org/book/)
+* [Rust standard library documentation](https://doc.rust-lang.org/std/index.html)
+* [Rust by example](https://doc.rust-lang.org/rust-by-example/)
 
 # Get started
 
@@ -87,14 +92,16 @@ You can fix this error by using Rust's nightly toolchain, more information about
 
  ### Run simulation without hardware
 
- If you want to run the simulation without the hardware, you can comment out the following lines
+ If you want to run the simulation without the hardware, you can remove the following lines
  * ``` .add_system(poll_system)``` (line 42 in controller.rs).
  * ```magnet_status.real = false;``` (line 262 in controller.rs).
+ * ```        let request = ehttp::Request::get(goal_url);``` (line 271 in controller.rs).
+ * ```ehttp::fetch(request, move |_result: ehttp::Result<ehttp::Response>| {});```(line 272 in controller.rs).
 
 
  ## Controlling the hardware
 
-The system will send HTTP Requests to an Arduino, which controls two steppermotors and an elektromagnet to show the same behaviour as in the simulation. You can download the code from this [repository](https://github.com/Sandraak/Automated_chessboard).
+The system will send HTTP Requests to an Arduino, which controls two steppermotors and an electromagnet to show the same behaviour as in the simulation. You can download the code from this [repository](https://github.com/Sandraak/Automated_chessboard).
 
 ### Hardware
 For this code to function you need to flash it to an Arduino Uno with Ethernetshield that is connected to the hardware according to the following scheme.
