@@ -99,6 +99,8 @@ The system will send HTTP Requests to an Arduino, which controls two steppermoto
 ### Hardware
 For this code to function you need to flash it to an Arduino Uno with Ethernetshield that is connected to the hardware according to the following scheme.
 
+![alt text](https://github.com/Sandraak/Automated_chessboard/blob/main/schematic/hardware_schema.png?raw=true)
+
 ### Arduino IDE
 
 You can install the Arduino IDE using the instructins on the [downloadpage](https://www.arduino.cc/en/software) of the Arduino website. Open the Arduino IDE and connect your Arduino to your laptop using USB, you can now select a port and board, the boardshoud be "Arduino Uno".
